@@ -67,7 +67,7 @@ def autoindex(text):
 
     scores = list(scores.values())
     scores.sort(key=lambda c:c['score'], reverse=True)
-    return [score for score in scores[:20] if score['score'] >= min(sentences / 2.0,3)]
+    return [score for score in scores if score['score'] >= min(sentences / 2.0,3)]
 
 if __name__ == '__main__':
     text = sys.stdin.read().decode('UTF-8').strip()
