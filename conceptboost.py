@@ -9,7 +9,7 @@ def reduce_boost(uri):
     
     req = {
         'script': {
-            'inline': 'ctx._source.boost = 0.8',
+            'inline': 'ctx._source.boost *= 0.8',
             'lang': 'painless'
         }
     }

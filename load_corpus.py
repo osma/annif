@@ -37,6 +37,6 @@ for file in files:
     print file, uri, label
     cid = uri.split('p')[-1]
     text = "".join(f.readlines())
-    body = {'uri': uri, 'label': label, 'text': text}
+    body = {'uri': uri, 'label': label, 'text': text, 'boost': 1}
     es.index(index='yso', doc_type='concept', id=cid, body=body)
     f.close()

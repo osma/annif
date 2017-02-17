@@ -48,7 +48,7 @@ def autoindex(text):
                     'script_score': {
                         'script': {
                             'lang': 'painless',
-                            'inline': "_score * (doc['boost'].isEmpty() ? 1 : doc['boost'].value)"
+                            'inline': "_score * doc['boost'].value"
                         }
                     }
                 }
