@@ -78,7 +78,7 @@ for concept in concepts:
     text = generate_text(concept)
     localname = concept['uri'].split('/')[-1]
     print localname, concept['pref'].encode('UTF-8')
-    f = open('corpus/%s.txt.new' % localname, 'w')
+    f = open('corpus/%s.txt' % localname, 'w')
     print >>f, concept['uri'], concept['pref'].encode('UTF-8')
     print >>f, text.encode('UTF-8')
     f.close()
