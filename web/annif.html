@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="fi">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<title>annif - automaattinen sisällönkuvailija Finna-korpuksella</title>
+<script type="text/javascript">
+
+var backend_url = '/cgi-bin/annif.cgi';
+
+
+$(document).ready(function() {
+    $('#submit').click(function() {
+        $.ajax({
+            url: backend_url,
+            method: 'POST',
+            data: { text: $('#text').val() },
+            success: function(data) {
+                $('#results').empty();
+                $.each(data, function(idx, value) {
+                    $('#results').append(
+                        $('<li>').append(
+                            $('<input type="checkbox" name="uri">').attr('value', value.uri),
+                            $('<a>').attr('href',value.uri).append(value.label)
+                        )
+                    );
+                });
+            }
+        });
+    });
+    $('#teach').click(function() {
+        $.each($('input:checked'), function() {
+            $(this).prop('checked', false);
+            $.ajax({
+                url: backend_url,
+                method: 'POST',
+                data: { uri: $(this).val() },
+                success: function(data) {
+                    console.log(data);
+                }
+            });
+        });
+    });
+});
+
+</script>
+
+
+</head>
+<body>
+<h1>annif - automaattinen sisällönkuvailija Finna-korpuksella</h1>
+<label for="text">Kuvailtava teksti:</label><br>
+<textarea rows="40" cols="100" name="text" id="text">
+
+</textarea>
+<div>
+<input type="submit" name="submit" id="submit" value="Kuvaile">
+</div>
+<h2>Tulokset</h2>
+<ul id="results">
+</ul>
+<input type="submit" name="teach" id="teach" value="Merkitse valitut vääriksi">
+
+</body>
+</html>
