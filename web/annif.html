@@ -8,38 +8,51 @@
 
 var backend_url = '/cgi-bin/annif.cgi';
 
+function clearResults() {
+    $('#results').empty();
+}
 
-$(document).ready(function() {
-    $('#submit').click(function() {
+function autoindex() {
+    $.ajax({
+        url: backend_url,
+        method: 'POST',
+        data: { text: $('#text').val() },
+        success: function(data) {
+            $.each(data, function(idx, value) {
+                $('#results').append(
+                    $('<li>').append(
+                        $('<input type="checkbox" name="uri">').attr('value', value.uri),
+                        $('<a>').attr('href',value.uri).append(value.label)
+                    )
+                );
+            });
+        }
+    });
+}
+
+function teach() {
+    $.each($('input:checked'), function() {
+        $(this).prop('checked', false);
         $.ajax({
             url: backend_url,
             method: 'POST',
-            data: { text: $('#text').val() },
+            data: { uri: $(this).val() },
             success: function(data) {
-                $('#results').empty();
-                $.each(data, function(idx, value) {
-                    $('#results').append(
-                        $('<li>').append(
-                            $('<input type="checkbox" name="uri">').attr('value', value.uri),
-                            $('<a>').attr('href',value.uri).append(value.label)
-                        )
-                    );
-                });
+                console.log(data);
             }
         });
     });
+}
+
+$(document).ready(function() {
+    $('#submit').click(function() {
+        clearResults();
+        autoindex();
+    });
     $('#teach').click(function() {
-        $.each($('input:checked'), function() {
-            $(this).prop('checked', false);
-            $.ajax({
-                url: backend_url,
-                method: 'POST',
-                data: { uri: $(this).val() },
-                success: function(data) {
-                    console.log(data);
-                }
-            });
-        });
+        teach();
+        clearResults();
+        autoindex();
     });
 });
 
