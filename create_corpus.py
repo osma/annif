@@ -3,6 +3,9 @@
 from SPARQLWrapper import SPARQLWrapper, JSON
 import requests
 import re
+import os
+import os.path
+import time
 
 FINTO_ENDPOINT='http://api.dev.finto.fi/sparql'
 FINNA_API_SEARCH='https://api.finna.fi/v1/search'
@@ -75,10 +78,19 @@ def generate_text(concept):
     return "\n".join(texts)
 
 for concept in concepts:
-    text = generate_text(concept)
     localname = concept['uri'].split('/')[-1]
     print localname, concept['pref'].encode('UTF-8')
-    f = open('corpus/%s.txt' % localname, 'w')
+    outfile = 'corpus/%s.txt' % localname
+    if os.path.exists(outfile):
+        continue
+    try:
+        text = generate_text(concept)
+    except:
+        # try once more
+        time.sleep(1)
+        text = generate_text(concept)
+    
+    f = open(outfile, 'w')
     print >>f, concept['uri'], concept['pref'].encode('UTF-8')
     print >>f, text.encode('UTF-8')
     f.close()
