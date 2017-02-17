@@ -11,7 +11,7 @@ print preflabel
 
 FINNISH = re.compile(r'\b(ja|joka|oli|kuin|jossa|jotka|jonka)\b')
 SWEDISH = re.compile(r'\b(och|med|som)\b')
-ENGLISH = re.compile(r'\b(and|of|for|at)\b')
+ENGLISH = re.compile(r'\b(and|of|for|at|the)\b')
 
 def is_finnish(text):
     # Quick and dirty regex shortcuts for detecting the most common languages
