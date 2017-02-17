@@ -17,6 +17,9 @@ indexconf = {
                 'text': {
                     'type': 'string',
                     'analyzer': 'finnish'
+                },
+                'boost': {
+                    'type': 'double'
                 }
             }
         }
