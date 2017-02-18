@@ -3,14 +3,17 @@
 from elasticsearch import Elasticsearch
 import sys
 
-def reduce_boost(uri):
+def adjust_boost(uri, factor=0.8):
     es = Elasticsearch()
     docid = uri.split('p')[-1]
     
     req = {
         'script': {
-            'inline': 'ctx._source.boost *= 0.8',
-            'lang': 'painless'
+            'inline': 'ctx._source.boost *= params.factor',
+            'lang': 'painless',
+            'params': {
+                'factor': factor
+            }
         }
     }
     
@@ -18,4 +21,4 @@ def reduce_boost(uri):
 
 if __name__ == '__main__':
     uri = sys.argv[1]
-    reduce_boost(uri)
+    adjust_boost(uri)

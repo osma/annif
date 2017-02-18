@@ -24,5 +24,5 @@ if text is not None:
 uri = form.getfirst('uri')
 
 if uri is not None:
-    conceptboost.reduce_boost(uri)
+    conceptboost.adjust_boost(uri)
     print '{ "status": "OK" }'
