@@ -14,6 +14,10 @@ indexconf = {
     'mappings': {
         'concept': {
             'properties': {
+                'labels': {
+                    'type': 'string',
+                    'analyzer': 'finnish'
+                },
                 'text': {
                     'type': 'string',
                     'analyzer': 'finnish'
@@ -36,7 +40,8 @@ for file in files:
     uri, label = f.readline().strip().split(' ', 1)
     print file, uri, label
     cid = uri.split('p')[-1]
-    text = "".join(f.readlines())
-    body = {'uri': uri, 'label': label, 'text': text, 'boost': 1}
+    labels = f.readline().strip()
+    text = labels + " " + "".join(f.readlines())
+    body = {'uri': uri, 'label': label, 'labels': labels, 'text': text, 'boost': 1}
     es.index(index='yso', doc_type='concept', id=cid, body=body)
     f.close()
