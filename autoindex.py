@@ -38,11 +38,27 @@ def autoindex(text):
             'query': {
                 'function_score': {
                     'query': {
-                        'common': {
-                            'text': {
-                                'query': sentence,
-                                'cutoff_frequency': 0.01
-                            }
+                        'dis_max': {
+                            'queries': [
+                                {
+                                    'common': {
+                                        'labels': {
+                                            'query': sentence,
+                                            'cutoff_frequency': 0.01,
+                                            'boost': 0.5
+                                        }
+                                    }
+                                },
+                                {
+                                    'common': {
+                                        'text': {
+                                            'query': sentence,
+                                            'cutoff_frequency': 0.01
+                                        }
+                                    }
+                                }
+                            ],
+                            'tie_breaker': 0.2
                         }
                     },
                     'script_score': {
@@ -72,5 +88,5 @@ def autoindex(text):
 if __name__ == '__main__':
     text = sys.stdin.read().decode('UTF-8').strip()
     scores = autoindex(text)
-    for c in scores[:20]:
+    for c in scores[:40]:
         print c['score'], c['uri'], c['label'].encode('UTF-8')
