@@ -61,11 +61,12 @@ def records_to_texts(records):
 def generate_text(concept):
     # start with pref- and altlabels
     if 'alts' in concept:
-        texts = [concept['pref'] + " " + concept['alts']]
+        labels = concept['pref'] + " " + concept['alts']
     else:
-        texts = [concept['pref']]
+        labels = concept['pref']
 
     # look for more text in Finna API
+    texts = []
     fields = ['title','summary']
     params = {'lookfor': '"%s"' % concept['pref'], 'type':'Subject', 'lng':'fi', 'limit':100, 'field[]':fields, 'headers':{'User-agent': 'annif 0.1'}}
 
@@ -73,28 +74,26 @@ def generate_text(concept):
     if 'records' in response:
         texts += records_to_texts(response['records'])
 
-    if len(texts) < 50 and '(' in concept['pref']:
+    if '(' in concept['pref']:
         # try without parenthetical qualifier
         params['lookfor'] = '"%s"' % concept['pref'].split('(')[0]
         response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
 
-    if len(texts) < 50:
-        # try search on all fields, not just subject
-        params['type'] = 'AllFields'
-        response = search_finna(params)
+    # try search on all fields, not just subject
+    params['type'] = 'AllFields'
+    response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
 
-    if len(texts) < 50:
-        # make a fuzzy search
-        params['lookfor'] = concept['pref']
-        response = search_finna(params)
+    # make a fuzzy search
+    params['lookfor'] = concept['pref']
+    response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
 
-    return "\n".join(texts)
+    return "\n".join([labels] + list(set(texts)))
 
 for concept in concepts:
     localname = concept['uri'].split('/')[-1]
