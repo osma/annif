@@ -3,6 +3,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
 import os
+import re
 
 es = Elasticsearch()
 index = IndicesClient(es)
@@ -43,6 +44,7 @@ for file in files:
     cid = uri.split('p')[-1]
     labels = f.readline().strip()
     text = labels + " " + "".join(f.readlines())
+    text = re.sub(r'\b\d+\b', '', text) # strip words that consist of only numbers
     body = {'uri': uri, 'label': label, 'labels': labels, 'text': text, 'boost': 1}
     es.index(index='yso', doc_type='concept', id=cid, body=body)
     f.close()
