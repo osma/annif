@@ -15,12 +15,13 @@ indexconf = {
         'concept': {
             'properties': {
                 'labels': {
-                    'type': 'string',
+                    'type': 'text',
                     'analyzer': 'finnish'
                 },
                 'text': {
-                    'type': 'string',
-                    'analyzer': 'finnish'
+                    'type': 'text',
+                    'analyzer': 'finnish',
+                    'term_vector': 'yes'
                 },
                 'boost': {
                     'type': 'double'
