@@ -4,6 +4,7 @@ from elasticsearch import Elasticsearch
 import nltk.data
 import sys
 import re
+import math
 
 FINNISH = re.compile(r'\b(ja|joka|oli|kuin|jossa|jotka|jonka)\b')
 SWEDISH = re.compile(r'\b(och|med|som)\b')
@@ -32,7 +33,7 @@ except IndexError:
 try:
     min_term_freq = int(sys.argv[5])
 except IndexError:
-    min_term_freq = 12
+    min_term_freq = None
 
 try:
     min_doc_freq = int(sys.argv[6])
@@ -75,6 +76,10 @@ def autoindex(text):
         fields = ['labels','text']
     else:
         fields = ['text']
+    
+    global min_term_freq
+    if min_term_freq is None:
+        min_term_freq = int((math.log10(nwords) - 1) * 4)
 
     query = {
         'query': {
