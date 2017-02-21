@@ -10,40 +10,6 @@ FINNISH = re.compile(r'\b(ja|joka|oli|kuin|jossa|jotka|jonka)\b')
 SWEDISH = re.compile(r'\b(och|med|som)\b')
 ENGLISH = re.compile(r'\b(and|of|for|at|the)\b')
 
-try:
-    use_labels = int(sys.argv[1])
-except IndexError:
-    use_labels = 0
-
-try:
-    boost_terms = float(sys.argv[2])
-except IndexError:
-    boost_terms = 0
-
-try:
-    minimum_should_match = int(sys.argv[3])
-except IndexError:
-    minimum_should_match = 20
-
-try:
-    max_doc_freq = int(sys.argv[4])
-except IndexError:
-    max_doc_freq = 3000
-
-try:
-    min_term_freq = int(sys.argv[5])
-except IndexError:
-    min_term_freq = None
-
-try:
-    min_doc_freq = int(sys.argv[6])
-except IndexError:
-    min_doc_freq = 3
-
-try:
-    max_query_terms = int(sys.argv[7])
-except IndexError:
-    max_query_terms = 1000
 
 def is_finnish(text):
     # Quick and dirty regex shortcuts for detecting the most common languages
@@ -68,9 +34,8 @@ def filter_text(text):
     filteredtext = ' '.join(sentences)
     return filteredtext
 
-def autoindex(text):
+def autoindex(text, use_labels=0, boost_terms=0, minimum_should_match=20, max_doc_freq=3000, min_term_freq=None, min_doc_freq=3, max_query_terms=1000):
     es = Elasticsearch()
-
     scores = {}
 
     if use_labels:
@@ -78,7 +43,6 @@ def autoindex(text):
     else:
         fields = ['text']
     
-    global min_term_freq
     if min_term_freq is None:
         nwords = len(text.split())
         min_term_freq = max(1, int((math.log10(nwords) - 1) * 4))
@@ -121,6 +85,41 @@ def autoindex(text):
 
 if __name__ == '__main__':
     text = sys.stdin.read().decode('UTF-8').strip()
-    scores = autoindex(filter_text(text))
+    try:
+        use_labels = int(sys.argv[1])
+    except IndexError:
+        use_labels = 0
+
+    try:
+        boost_terms = float(sys.argv[2])
+    except IndexError:
+        boost_terms = 0
+
+    try:
+        minimum_should_match = int(sys.argv[3])
+    except IndexError:
+        minimum_should_match = 20
+
+    try:
+        max_doc_freq = int(sys.argv[4])
+    except IndexError:
+        max_doc_freq = 3000
+
+    try:
+        min_term_freq = int(sys.argv[5])
+    except IndexError:
+        min_term_freq = None
+
+    try:
+        min_doc_freq = int(sys.argv[6])
+    except IndexError:
+        min_doc_freq = 3
+
+    try:
+        max_query_terms = int(sys.argv[7])
+    except IndexError:
+        max_query_terms = 1000
+
+    scores = autoindex(filter_text(text), use_labels, boost_terms, minimum_should_match, max_doc_freq, min_term_freq, min_doc_freq, max_query_terms)
     for c in scores[:40]:
         print c['score'], c['uri'], c['label'].encode('UTF-8')
