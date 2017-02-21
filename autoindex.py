@@ -56,13 +56,9 @@ def is_finnish(text):
     # assume Finnish
     return True
 
-def autoindex(text):
-    es = Elasticsearch()
+def filter_text(text):
     tokenizer = nltk.data.load('tokenizers/punkt/english.pickle') 
-
-    scores = {}
     sentences = []
-
     for sentence in tokenizer.tokenize(text):
         nwords = len(sentence.split())
         if not is_finnish(sentence):
@@ -70,7 +66,12 @@ def autoindex(text):
         sentences.append(sentence)
     
     filteredtext = ' '.join(sentences)
-    nwords = len(filteredtext.split())
+    return filteredtext
+
+def autoindex(text):
+    es = Elasticsearch()
+
+    scores = {}
 
     if use_labels:
         fields = ['labels','text']
@@ -79,7 +80,8 @@ def autoindex(text):
     
     global min_term_freq
     if min_term_freq is None:
-        min_term_freq = int((math.log10(nwords) - 1) * 4)
+        nwords = len(text.split())
+        min_term_freq = max(1, int((math.log10(nwords) - 1) * 4))
 
     query = {
         'query': {
@@ -87,7 +89,7 @@ def autoindex(text):
                 'query': {
                     'more_like_this': {
                         'fields': fields,
-                        'like' : filteredtext,
+                        'like' : text,
                         'min_term_freq': min_term_freq,
                         'min_doc_freq': min_doc_freq,
                         'max_doc_freq': max_doc_freq,
@@ -119,6 +121,6 @@ def autoindex(text):
 
 if __name__ == '__main__':
     text = sys.stdin.read().decode('UTF-8').strip()
-    scores = autoindex(text)
+    scores = autoindex(filter_text(text))
     for c in scores[:40]:
         print c['score'], c['uri'], c['label'].encode('UTF-8')
