@@ -30,14 +30,14 @@ def copy_and_set(d, key, val):
     d2[key] = val
     return d2
 
-def neighbour_params(params):
+def neighbour_params(params, stepfactor):
     neighbours = []
     for name,val in params.items():
         minv, maxv, step = paramdefs[name]
-        if val - step >= minv:
-            neighbours.append(copy_and_set(params, name, val - step))
-        if val + step <= maxv:
-            neighbours.append(copy_and_set(params, name, val + step))
+        if val - (step * stepfactor) >= minv:
+            neighbours.append(copy_and_set(params, name, val - (step * stepfactor)))
+        if val + (step * stepfactor) <= maxv:
+            neighbours.append(copy_and_set(params, name, val + (step * stepfactor)))
     return neighbours
 
 def evaluate(text, goldlabels, params):
@@ -48,7 +48,6 @@ def evaluate(text, goldlabels, params):
         if res['label'] in goldlabels:
             score += value
         value *= 0.9
-    print "eval:", params, "score:", score
     return score
 
 def optimize(text, goldlabels):
@@ -60,12 +59,17 @@ def optimize(text, goldlabels):
     while True:
         stepped = False
         print "current params:", params, "score:", maxscore
-        for nbparams in neighbour_params(params):
-            score = evaluate(filteredtext, goldlabels, nbparams)
-            if maxscore is None or score > maxscore:
-                params = nbparams
-                maxscore = score
-                stepped = True
+        for stepfactor in range(1,10+1):
+            print "stepfactor:", stepfactor
+            for nbparams in neighbour_params(params, stepfactor):
+                score = evaluate(filteredtext, goldlabels, nbparams)
+                if maxscore is None or score > maxscore:
+                    params = nbparams
+                    maxscore = score
+                    stepped = True
+            if stepped:
+                # already found better params, no need to step further
+                break
         if not stepped:
             break
     
