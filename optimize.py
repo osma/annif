@@ -1,19 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # hill climbing algorithm for determining optimum parameters
 
 import sys
 import random
 import autoindex
+import functools
 
 # parameters and their ranges (inclusive) and step
 paramdefs = {
-    'use_labels': (0, 1, 1),
-    'boost_terms': (0, 4, 1),
-    'minimum_should_match': (5,50,5),
-    'max_doc_freq': (500,6001,500),
-    'min_term_freq': (1,35,1),
-    'min_doc_freq': (1,20,1),
-#    'max_query_terms': (100,1001,100)
+    'min_block_length': (3,20,1),
+    'cutoff_frequency': (1,21,5), # divided by 1000
+    'limit': (4,20,4),
+    'normalize': (0,1,1) # converted to boolean
 }
 
 cache = {}
@@ -47,13 +45,13 @@ def neighbour_params(params, stepfactor):
             neighbours.append(copy_and_set(params, name, val + (step * stepfactor)))
     return neighbours
 
-def evaluate(text, goldlabels, params):
+def evaluate(sentences, goldlabels, params):
     global cache
-    cachekey = (text, goldlabels, param_str(params))
+    cachekey = (sentences, goldlabels, param_str(params))
     if cachekey in cache:
         return cache[cachekey]
-
-    results = autoindex.autoindex(text, **params)
+    
+    results = autoindex.autoindex(sentences, **params)
     value = 1.0
     score = 0.0
     for res in results:
@@ -66,12 +64,11 @@ def evaluate(text, goldlabels, params):
         # to help getting away from "deserts" with zero results
         score = 0.00001 * len(results)
     
+    print((param_str(params), score))
     cache[cachekey] = score
     return score
 
-def optimize(text, goldlabels):
-    filteredtext = autoindex.filter_text(text)
-
+def optimize(sentences, goldlabels):
     params = generate_initial_params()
     maxscore = None
 
@@ -79,7 +76,7 @@ def optimize(text, goldlabels):
         stepped = False
         for stepfactor in range(1,10+1):
             for nbparams in neighbour_params(params, stepfactor):
-                score = evaluate(filteredtext, goldlabels, nbparams)
+                score = evaluate(sentences, goldlabels, nbparams)
                 if maxscore is None or score > maxscore:
                     params = nbparams
                     maxscore = score
@@ -96,16 +93,16 @@ def optimize(text, goldlabels):
 if __name__ == '__main__':
     textfile = sys.argv[1]
     goldfile = sys.argv[2]
-    text = autoindex.filter_text(open(textfile).read().decode('UTF-8'))
+    sentences = tuple(autoindex.split_to_sentences(open(textfile).read()))
     gold = open(goldfile).readlines()
-    goldlabels = tuple([label.strip().decode('UTF-8') for label in gold])
-    print len(text), goldlabels
+    goldlabels = tuple([label.strip() for label in gold])
+    print(len(sentences), goldlabels)
     bestparams = None
     bestscore = 0.0
     for i in range(20):
-        params, score = optimize(text, goldlabels)
-        print "round %d params: %s score: %f" % (i, param_str(params), score)
+        params, score = optimize(sentences, goldlabels)
+        print("round %d params: %s score: %f" % (i, param_str(params), score))
         if score > bestscore:
             bestscore = score
             bestparams = params
-    print "best params: %s score: %f" % (param_str(bestparams), bestscore)
+    print("best params: %s score: %f" % (param_str(bestparams), bestscore))

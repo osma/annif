@@ -1,13 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from elasticsearch import Elasticsearch
 import nltk.data
 import sys
 import re
 import math
+import functools
 
 FINNISH = re.compile(r'\b(ja|joka|oli|kuin|jossa|jotka|jonka)\b')
-SWEDISH = re.compile(r'\b(och|med|som)\b')
+SWEDISH = re.compile(r'\b(och|med|som|att|den|det|eller|av)\b')
 ENGLISH = re.compile(r'\b(and|of|for|at|the)\b')
 
 
@@ -22,44 +23,29 @@ def is_finnish(text):
     # assume Finnish
     return True
 
-def filter_text(text):
-    tokenizer = nltk.data.load('tokenizers/punkt/english.pickle') 
+sentence_tokenizer = nltk.data.load('tokenizers/punkt/english.pickle') 
+def split_to_sentences(text):
     sentences = []
-    for sentence in tokenizer.tokenize(text):
-        nwords = len(sentence.split())
+    for sentence in sentence_tokenizer.tokenize(text):
         if not is_finnish(sentence):
             continue
         sentences.append(sentence)
-    
-    filteredtext = ' '.join(sentences)
-    return filteredtext
+    return sentences
 
-def autoindex(text, use_labels=0, boost_terms=0, minimum_should_match=20, max_doc_freq=3000, min_term_freq=None, min_doc_freq=3, max_query_terms=1000):
+@functools.lru_cache(maxsize=None)
+def autoindex_block(text, cutoff_frequency, limit, normalize):
     es = Elasticsearch()
     scores = {}
-
-    if use_labels:
-        fields = ['labels','text']
-    else:
-        fields = ['text']
-    
-    if min_term_freq is None:
-        nwords = len(text.split())
-        min_term_freq = max(1, int((math.log10(nwords) - 1) * 4))
 
     query = {
         'query': {
             'function_score': {
                 'query': {
-                    'more_like_this': {
-                        'fields': fields,
-                        'like' : text,
-                        'min_term_freq': min_term_freq,
-                        'min_doc_freq': min_doc_freq,
-                        'max_doc_freq': max_doc_freq,
-                        'max_query_terms': max_query_terms,
-                        'minimum_should_match': '%d%%' % minimum_should_match,
-                        'boost_terms': boost_terms
+                    'common': {
+                        'text': {
+                            'query': text,
+                            'cutoff_frequency': cutoff_frequency
+                        }
                     }
                 },
                 'script_score': {
@@ -72,54 +58,51 @@ def autoindex(text, use_labels=0, boost_terms=0, minimum_should_match=20, max_do
         }
     }
 
-    limit = 100
     res = es.search(index='yso', doc_type='concept', body=query, size=limit)
+    maxscore = None
     for hit in res['hits']['hits']:
+        if maxscore is None:
+            maxscore = hit['_score'] # score of best hit
         uri = hit['_source']['uri']
         scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label'], 'score': 0})
-        scores[uri]['score'] += hit['_score']
+        if normalize:
+            scores[uri]['score'] += hit['_score'] / maxscore
+        else:
+            scores[uri]['score'] += 1
     
-    scores = list(scores.values())
+    return scores
+
+def autoindex(sentences, min_block_length, cutoff_frequency, limit, normalize):
+    all_scores = {}
+    
+    # allow integer values representing thousands
+    if cutoff_frequency >= 1.0:
+        cutoff_frequency *= 0.001
+
+    block = None
+    for sentence in sentences:
+        if block is None:
+            block = sentence
+        else:
+            block = block + " " + sentence
+        if len(block.split()) < min_block_length:
+            continue
+        scores = autoindex_block(block, cutoff_frequency, limit, normalize)
+        # merge the results into the shared scoring dict
+        for uri, hitdata in scores.items():
+            if uri in all_scores:
+                all_scores[uri]['score'] += hitdata['score']
+            else:
+                all_scores[uri] = hitdata
+        
+    scores = list(all_scores.values())
     scores.sort(key=lambda c:c['score'], reverse=True)
     return [score for score in scores]
 
+
 if __name__ == '__main__':
-    text = sys.stdin.read().decode('UTF-8').strip()
-    try:
-        use_labels = int(sys.argv[1])
-    except IndexError:
-        use_labels = 0
+    text = sys.stdin.read().strip()
 
-    try:
-        boost_terms = float(sys.argv[2])
-    except IndexError:
-        boost_terms = 0
-
-    try:
-        minimum_should_match = int(sys.argv[3])
-    except IndexError:
-        minimum_should_match = 20
-
-    try:
-        max_doc_freq = int(sys.argv[4])
-    except IndexError:
-        max_doc_freq = 3000
-
-    try:
-        min_term_freq = int(sys.argv[5])
-    except IndexError:
-        min_term_freq = None
-
-    try:
-        min_doc_freq = int(sys.argv[6])
-    except IndexError:
-        min_doc_freq = 3
-
-    try:
-        max_query_terms = int(sys.argv[7])
-    except IndexError:
-        max_query_terms = 1000
-
-    scores = autoindex(filter_text(text), use_labels, boost_terms, minimum_should_match, max_doc_freq, min_term_freq, min_doc_freq, max_query_terms)
+    scores = autoindex(split_to_sentences(text), min_block_length=5, cutoff_frequency=0.01, limit=10, normalize=True)
     for c in scores[:100]:
-        print c['score'], c['uri'], c['label'].encode('UTF-8')
+        print(c['score'], c['uri'], c['label'])
