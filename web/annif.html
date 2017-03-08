@@ -4,6 +4,21 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <title>annif - automaattinen sisällönkuvailija Finna-korpuksella</title>
+<style type="text/css">
+body {
+  font-family: sans-serif;
+}
+textarea {
+  float: left;
+  margin-right: 2em;
+}
+#results {
+  min-height: 40em;
+  margin-left: 3em;
+  list-style-type: none;
+
+}
+</style>
 <script type="text/javascript">
 
 var backend_url = '/cgi-bin/annif.cgi';
@@ -63,16 +78,16 @@ $(document).ready(function() {
 <body>
 <h1>annif - automaattinen sisällönkuvailija Finna-korpuksella</h1>
 <label for="text">Kuvailtava teksti:</label><br>
-<textarea rows="40" cols="100" name="text" id="text">
+<textarea rows="80" cols="100" name="text" id="text">
 
 </textarea>
 <div>
-<input type="submit" name="submit" id="submit" value="Kuvaile">
+<input type="submit" name="submit" id="submit" value="Analysoi">
 </div>
 <h2>Tulokset</h2>
 <ul id="results">
 </ul>
-<input type="submit" name="teach" id="teach" value="Merkitse valitut vääriksi">
+<input type="submit" name="teach" id="teach" value="Ilmoita valitut vääriksi">
 
 </body>
 </html>
