@@ -72,7 +72,7 @@ def autoindex(text, use_labels=0, boost_terms=0, minimum_should_match=20, max_do
         }
     }
 
-    limit = 40
+    limit = 100
     res = es.search(index='yso', doc_type='concept', body=query, size=limit)
     for hit in res['hits']['hits']:
         uri = hit['_source']['uri']
@@ -121,5 +121,5 @@ if __name__ == '__main__':
         max_query_terms = 1000
 
     scores = autoindex(filter_text(text), use_labels, boost_terms, minimum_should_match, max_doc_freq, min_term_freq, min_doc_freq, max_query_terms)
-    for c in scores[:40]:
+    for c in scores[:100]:
         print c['score'], c['uri'], c['label'].encode('UTF-8')

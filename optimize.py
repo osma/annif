@@ -8,12 +8,12 @@ import autoindex
 # parameters and their ranges (inclusive) and step
 paramdefs = {
     'use_labels': (0, 1, 1),
-    'boost_terms': (0, 1, 1),
-    'minimum_should_match': (10,40,5),
-    'max_doc_freq': (1000,8001,1000),
-    'min_term_freq': (1,20,1),
-    'min_doc_freq': (1,10,1),
-    'max_query_terms': (100,1001,100)
+    'boost_terms': (0, 4, 1),
+    'minimum_should_match': (5,50,5),
+    'max_doc_freq': (500,6001,500),
+    'min_term_freq': (1,35,1),
+    'min_doc_freq': (1,20,1),
+#    'max_query_terms': (100,1001,100)
 }
 
 cache = {}
@@ -33,6 +33,8 @@ def copy_and_set(d, key, val):
     return d2
 
 def param_str(params):
+    if params is None:
+        return '{}'
     return '{' + ', '.join(["'%s': %d" % (k, params[k]) for k in sorted(params.keys())]) + '}'
 
 def neighbour_params(params, stepfactor):
@@ -58,6 +60,12 @@ def evaluate(text, goldlabels, params):
         if res['label'] in goldlabels:
             score += value
         value *= 0.9
+    
+    if score == 0.0:
+        # tiny incentive for getting at least some results
+        # to help getting away from "deserts" with zero results
+        score = 0.00001 * len(results)
+    
     cache[cachekey] = score
     return score
 
@@ -94,7 +102,7 @@ if __name__ == '__main__':
     print len(text), goldlabels
     bestparams = None
     bestscore = 0.0
-    for i in range(10):
+    for i in range(20):
         params, score = optimize(text, goldlabels)
         print "round %d params: %s score: %f" % (i, param_str(params), score)
         if score > bestscore:
