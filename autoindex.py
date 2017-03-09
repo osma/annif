@@ -32,10 +32,9 @@ def split_to_sentences(text):
         sentences.append(sentence)
     return sentences
 
-@functools.lru_cache(maxsize=None)
-def autoindex_block(text, cutoff_frequency, limit, normalize):
+@functools.lru_cache(maxsize=100000)
+def search(text, cutoff_frequency):
     es = Elasticsearch()
-    scores = {}
 
     query = {
         'query': {
@@ -58,9 +57,13 @@ def autoindex_block(text, cutoff_frequency, limit, normalize):
         }
     }
 
-    res = es.search(index='yso', doc_type='concept', body=query, size=limit)
+    return es.search(index='yso', doc_type='concept', body=query, size=40, _source=['uri','label'])
+
+def autoindex_block(text, cutoff_frequency, limit, normalize):
+    scores = {}
+    res = search(text, cutoff_frequency)
     maxscore = None
-    for hit in res['hits']['hits']:
+    for hit in res['hits']['hits'][:limit]:
         if maxscore is None:
             maxscore = hit['_score'] # score of best hit
         uri = hit['_source']['uri']
@@ -72,7 +75,11 @@ def autoindex_block(text, cutoff_frequency, limit, normalize):
     
     return scores
 
-def autoindex(sentences, min_block_length, cutoff_frequency, limit, normalize):
+def autoindex(text, min_block_length=10, cutoff_frequency=0.01, limit=10, normalize=True, threshold=None, maxhits=None):
+    if isinstance(text, str):
+        sentences = split_to_sentences(text)
+    else:
+        sentences = text
     all_scores = {}
     
     # allow integer values representing thousands
@@ -85,9 +92,21 @@ def autoindex(sentences, min_block_length, cutoff_frequency, limit, normalize):
             block = sentence
         else:
             block = block + " " + sentence
-        if len(block.split()) < min_block_length:
+        nwords = len(block.split())
+        if nwords < min_block_length:
             continue
-        scores = autoindex_block(block, cutoff_frequency, limit, normalize)
+        
+        if nwords > 1000:
+            # avoid too big blocks
+            words = block.split()
+            evalblock = ' '.join(words[:1000])
+            block = ' '.join(words[1000:]) # leave this for the next iteration
+        else:
+            evalblock = block
+            # next evaluation starts with an empty block
+            block = None
+            
+        scores = autoindex_block(evalblock, cutoff_frequency, limit, normalize)
         # merge the results into the shared scoring dict
         for uri, hitdata in scores.items():
             if uri in all_scores:
@@ -97,12 +116,16 @@ def autoindex(sentences, min_block_length, cutoff_frequency, limit, normalize):
         
     scores = list(all_scores.values())
     scores.sort(key=lambda c:c['score'], reverse=True)
-    return [score for score in scores]
-
+    if maxhits is not None:
+        scores = scores[:maxhits]
+    if len(scores) > 0 and threshold is not None:
+        maxscore = scores[0]['score']
+        scores = [s for s in scores if s['score'] >= maxscore * threshold]
+    return scores
 
 if __name__ == '__main__':
     text = sys.stdin.read().strip()
 
-    scores = autoindex(split_to_sentences(text), min_block_length=5, cutoff_frequency=0.01, limit=10, normalize=True)
+    scores = autoindex(split_to_sentences(text), threshold=0.2, maxhits=20)
     for c in scores[:100]:
         print(c['score'], c['uri'], c['label'])
