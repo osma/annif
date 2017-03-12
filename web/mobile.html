@@ -1,0 +1,200 @@
+<!doctype html>
+<html>
+<head>
+    <title>annif mobile</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet"
+    href="https://code.jquery.com/mobile/1.5.0-alpha.1/jquery.mobile-1.5.0-alpha.1.min.css">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script
+    src="https://code.jquery.com/mobile/1.5.0-alpha.1/jquery.mobile-1.5.0-alpha.1.min.js"></script>
+    <style type="text/css">
+   
+#previewimg {
+/*    width: 100%; */
+} 
+
+#previewtext {
+    width: 100%;
+    height: 100%;
+}    
+    </style>
+    <script>
+
+var backend_url = '/cgi-bin/annif.cgi';
+var MAX_WIDTH = 2000;
+var MAX_HEIGHT = 2000;
+var OCRAPIKEY = ""; // NOTE: insert ocr.space API key here
+
+function handleImage(files) {
+    var img = document.getElementById('previewimg');
+    var reader = new FileReader();
+    reader.onload = (function(aImg) { 
+        return function(e) { 
+            aImg.onload = resize;
+            aImg.src = e.target.result;
+        };
+    })(img);
+    reader.readAsDataURL(files[0]);
+}
+
+function resize(ev) {
+    var img = document.getElementById('previewimg');
+    console.log(img);
+    var canvas = document.createElement('canvas');
+    var width = img.width;
+    var height = img.height;
+    console.log(img);
+    console.log([width, height]);
+    $('#info').text("width: " + width + " height:" + height);
+    if (width > height) {
+        if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+        }
+    } else {
+        if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+        }
+    }
+    canvas.width = width;
+    canvas.height = height;
+    console.log(canvas);
+    console.log([width, height]);
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, width, height);
+    
+    canvas.toBlob(ocr, "image/jpeg", 0.8);
+}
+
+function ocr(blob) {
+    console.log(blob);
+    var file = new File([blob], "blob.jpg");
+
+    //Prepare form data
+    var formData = new FormData();
+    formData.append("file", file);
+    formData.append("language" , "fin");
+    formData.append("apikey", OCRAPIKEY);
+    formData.append("isOverlayRequired", false);
+    //Send OCR Parsing request asynchronously
+    jQuery.ajax({
+        url: "https://api.ocr.space/parse/image",
+        data: formData,
+        dataType: 'json',
+        cache: false,
+        contentType: false,
+        processData: false,
+        type: 'POST',
+        error: function(jqxhr, textStatus, errorThrown) {
+            $('#info').text("ERROR status: " + textStatus + " error:" + errorThrown);
+        },
+        success: function (ocrParsedResult) {
+            //Get the parsed results, exit code and error message and details
+            var parsedResults = ocrParsedResult["ParsedResults"];
+            var ocrExitCode = ocrParsedResult["OCRExitCode"];
+            var isErroredOnProcessing = ocrParsedResult["IsErroredOnProcessing"];
+            var errorMessage = ocrParsedResult["ErrorMessage"];
+            var errorDetails = ocrParsedResult["ErrorDetails"];
+            var processingTimeInMilliseconds = ocrParsedResult["ProcessingTimeInMilliseconds"];
+            //If we have got parsed results, then loop over the results to do something
+            if (parsedResults!= null) {
+                //Loop through the parsed results
+                $.each(parsedResults, function (index, value) {
+                    var exitCode = value["FileParseExitCode"];
+                    var parsedText = value["ParsedText"];
+                    var errorMessage = value["ParsedTextFileName"];
+                    var errorDetails = value["ErrorDetails"];
+
+                    var textOverlay = value["TextOverlay"];
+                    var pageText = '';
+                    switch (+exitCode) {
+                        case 1:
+                            pageText = parsedText;
+                            break;
+                        case 0:
+                        case -10:
+                        case -20:
+                        case -30:
+                        case -99:
+                        default:
+                            pageText += "Error: " + errorDetails + " size:" + file.size + " type:" + file.type;
+                        break;
+                    }
+                    console.log(pageText);
+                    $('#previewtext').val(pageText);
+//                    $('#tabs').tabs({
+//                        active: 1
+//                    });
+                    $('a[href="#text"]').trigger("click");
+                    autoindex();
+                });
+            }
+        }
+    });
+}
+
+function autoindex() {
+    $.ajax({
+        url: backend_url,
+        method: 'POST',
+        data: { text: $('#previewtext').val() },
+        success: function(data) {
+            $('#results').empty();
+            $.each(data, function(idx, value) {
+                $('#results').append(
+                    $('<li>').append(
+//                        $('<input type="checkbox" name="uri">').attr('value', value.uri),
+                        $('<a>').attr('href',value.uri).append(value.label)
+                    )
+                );
+            });
+            $('a[href="#topics"]').trigger("click");
+        }
+    });
+}
+
+
+    </script>
+</head>
+<body>
+    <div data-role="page">
+ 
+        <div role="main" class="ui-content">
+
+<div data-role="tabs" id="tabs">
+    <div data-role="navbar">
+        <ul>
+          <li><a href="#image" data-theme="a" data-ajax="false">Kuva</a></li>
+          <li><a href="#text" data-theme="a" data-ajax="false">Teksti</a></li>
+          <li><a href="#topics" data-theme="a" data-ajax="false">Aiheet</a></li>
+        </ul>
+    </div>
+    <div id="image" class="ui-content">
+        <input id="imageinput" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
+        <span id="info">info</span>
+        <div id="preview">
+          <img id="previewimg">
+        </div>
+    </div>
+    <div id="text" class="ui-content">
+        <textarea id="previewtext" rows="40" cols="80">
+        
+        </textarea>
+    </div>
+    <div id="topics" class="ui-content">
+        <ul id="results">
+        </ul>
+    </div>
+</div>
+
+
+
+
+        </div><!-- /content -->
+ 
+    </div><!-- /page -->
+</body>
+</html>
