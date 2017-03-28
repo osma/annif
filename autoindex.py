@@ -75,7 +75,7 @@ def autoindex_block(text, cutoff_frequency, limit, normalize):
     
     return scores
 
-def autoindex(text, min_block_length=10, cutoff_frequency=0.01, limit=10, normalize=True, threshold=None, maxhits=None):
+def autoindex(text, min_block_length=15, cutoff_frequency=0.01, limit=30, normalize=True, threshold=None, maxhits=None):
     if isinstance(text, str):
         sentences = split_to_sentences(text)
     else:
