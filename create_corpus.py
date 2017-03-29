@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from SPARQLWrapper import SPARQLWrapper, JSON
 import requests
@@ -12,7 +12,8 @@ FINNA_API_SEARCH='https://api.finna.fi/v1/search'
 
 def row_to_concept(row):
     concept = {'uri': row['c']['value'],
-               'pref': row['pref']['value']}
+               'pref': row['pref']['value'],
+               'ysapref': row['ysapref']['value']}
     if 'alts' in row:
         concept['alts'] = row['alts']['value']
     return concept
@@ -22,20 +23,27 @@ def get_concepts():
     sparql.setQuery("""
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX ysometa: <http://www.yso.fi/onto/yso-meta/>
 
-SELECT ?c ?pref (GROUP_CONCAT(?alt) AS ?alts)
-FROM <http://www.yso.fi/onto/yso/>
+SELECT ?c ?pref (GROUP_CONCAT(?alt) AS ?alts) ?ysapref
 WHERE {
-  ?c a skos:Concept .
-  ?c skos:prefLabel ?pref .
-  FILTER(LANG(?pref)='fi')
-  OPTIONAL {
-    ?c skos:altLabel ?alt .
-    FILTER(LANG(?alt)='fi')
+  GRAPH <http://www.yso.fi/onto/yso/> {
+    ?c a skos:Concept .
+    ?c skos:closeMatch|skos:exactMatch ?ysac .
+    ?c skos:prefLabel ?pref .
+    FILTER(LANG(?pref)='fi')
+    OPTIONAL {
+      ?c skos:altLabel ?alt .
+      FILTER(LANG(?alt)='fi')
+    }
+    FILTER NOT EXISTS { ?c owl:deprecated true }
+    FILTER NOT EXISTS { ?c a ysometa:Hierarchy }
   }
-  FILTER NOT EXISTS { ?c owl:deprecated true }
+  GRAPH <http://www.yso.fi/onto/ysa/> {
+    ?ysac skos:prefLabel ?ysapref .
+  }
 }
-GROUP BY ?c ?pref
+GROUP BY ?c ?pref ?ysapref
 #LIMIT 500
 """)
     sparql.setReturnFormat(JSON)
@@ -45,7 +53,7 @@ GROUP BY ?c ?pref
 concepts = get_concepts()
 
 def search_finna(params):
-    r = requests.get(FINNA_API_SEARCH, params=params)
+    r = requests.get(FINNA_API_SEARCH, params=params, headers={'User-agent': 'annif 0.1'})
     return r.json()
 
 def records_to_texts(records):
@@ -61,34 +69,16 @@ def records_to_texts(records):
 def generate_text(concept):
     # start with pref- and altlabels
     if 'alts' in concept:
-        labels = concept['pref'] + " " + concept['alts']
+        labels = concept['pref'] + " " + concept['ysapref'] + " " + concept['alts']
     else:
-        labels = concept['pref']
+        labels = concept['pref'] + " " + concept['ysapref']
 
     # look for more text in Finna API
     texts = []
     fields = ['title','summary']
-    params = {'lookfor': '"%s"' % concept['pref'], 'type':'Subject', 'lng':'fi', 'limit':100, 'field[]':fields, 'headers':{'User-agent': 'annif 0.1'}}
+#    params = {'lookfor': 'topic_facet:%s' % concept['ysapref'], 'filter[]': 'language:fin', 'lng':'fi', 'limit':100, 'field[]':fields}
+    params = {'lookfor': '"%s"' % concept['ysapref'], 'type': 'Subject', 'filter[]': 'language:fin', 'lng':'fi', 'limit':100, 'field[]':fields}
 
-    response = search_finna(params)
-    if 'records' in response:
-        texts += records_to_texts(response['records'])
-
-    if '(' in concept['pref']:
-        # try without parenthetical qualifier
-        params['lookfor'] = '"%s"' % concept['pref'].split('(')[0]
-        response = search_finna(params)
-    if 'records' in response:
-        texts += records_to_texts(response['records'])
-
-    # try search on all fields, not just subject
-    params['type'] = 'AllFields'
-    response = search_finna(params)
-    if 'records' in response:
-        texts += records_to_texts(response['records'])
-
-    # make a fuzzy search
-    params['lookfor'] = concept['pref']
     response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
@@ -97,7 +87,6 @@ def generate_text(concept):
 
 for concept in concepts:
     localname = concept['uri'].split('/')[-1]
-    print localname, concept['pref'].encode('UTF-8')
     outfile = 'corpus/%s.txt' % localname
     if os.path.exists(outfile):
         continue
@@ -107,8 +96,9 @@ for concept in concepts:
         # try once more
         time.sleep(1)
         text = generate_text(concept)
+    print(localname, concept['pref'], concept['ysapref'], len(text.split()))
     
     f = open(outfile, 'w')
-    print >>f, concept['uri'], concept['pref'].encode('UTF-8')
-    print >>f, text.encode('UTF-8')
+    print (concept['uri'], concept['pref'], file=f)
+    print (text, file=f)
     f.close()
