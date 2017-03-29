@@ -76,9 +76,22 @@ def generate_text(concept):
     # look for more text in Finna API
     texts = []
     fields = ['title','summary']
-#    params = {'lookfor': 'topic_facet:%s' % concept['ysapref'], 'filter[]': 'language:fin', 'lng':'fi', 'limit':100, 'field[]':fields}
-    params = {'lookfor': '"%s"' % concept['ysapref'], 'type': 'Subject', 'filter[]': 'language:fin', 'lng':'fi', 'limit':100, 'field[]':fields}
 
+    # Search type 1: exact matches using topic facet
+    params = {'lookfor': 'topic_facet:%s' % concept['ysapref'], 'filter[]': 'language:fin', 'lng':'fi', 'limit':100, 'field[]':fields}
+    response = search_finna(params)
+    if 'records' in response:
+        texts += records_to_texts(response['records'])
+        
+    # Search type 2: exact matches using Subject search
+    params['lookfor'] = '"%s"' % concept['ysapref']
+    params['type'] = 'Subject'
+    response = search_finna(params)
+    if 'records' in response:
+        texts += records_to_texts(response['records'])
+
+    # Search type 3: fuzzy matches using Subject search
+    params['lookfor'] = concept['ysapref']
     response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
