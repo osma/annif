@@ -85,7 +85,7 @@ def autoindex_block_merge(all_scores, text, cutoff_frequency, limit, normalize):
             all_scores[uri] = hitdata
     
 
-def autoindex(text, min_block_length=15, cutoff_frequency=0.01, limit=30, normalize=True, threshold=None, maxhits=None):
+def autoindex(text, min_block_length=20, cutoff_frequency=0.009, limit=34, normalize=True, threshold=None, maxhits=None):
     if isinstance(text, str):
         sentences = split_to_sentences(text)
     else:
