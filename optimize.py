@@ -10,15 +10,19 @@ import functools
 
 # parameters and their ranges (inclusive) and step
 paramdefs = {
-    'min_block_length': (10,40,5),
-    'cutoff_frequency': (1,22,3), # divided by 1000
-    'limit': (4,40,4),
+    'min_block_length': (15,25,1),
+    'cutoff_frequency': (7,14,1), # divided by 1000
+    'limit': (8,40,2),
 #    'normalize': (0,1,1) # converted to boolean
 }
 
+class hashabledict(dict):
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
+
 def generate_initial_params():
     # generate a random set of parameters, respecting the defined ranges
-    params = {}
+    params = hashabledict()
     for name,rangedef in paramdefs.items():
         minv, maxv, step = rangedef
         params[name] = random.randrange(minv, maxv+1, step)
@@ -26,7 +30,7 @@ def generate_initial_params():
 
 def copy_and_set(d, key, val):
     """return a copy of a dict, with key set to val"""
-    d2 = d.copy()
+    d2 = hashabledict(d)
     d2[key] = val
     return d2
 
@@ -45,6 +49,7 @@ def neighbour_params(params, stepfactor):
             neighbours.append(copy_and_set(params, name, val + (step * stepfactor)))
     return neighbours
 
+@functools.lru_cache(maxsize=10000)
 def evaluate_document(sentences, goldlabels, name, params):
     results = autoindex.autoindex(sentences, **params)
     value = 1.0
@@ -76,13 +81,13 @@ def optimize(documents):
         stepped = False
         for stepfactor in range(1,10+1):
             print("current params: %s step: %d score: %s" % (param_str(curparams), stepfactor, str(maxscore)))
-            print("cache info:", autoindex.search.cache_info())
+            print("cache info:", autoindex.search.cache_info(), evaluate_document.cache_info())
             for nbparams in neighbour_params(curparams, stepfactor):
                 score = evaluate_documents(documents, nbparams)
                 if maxscore is None or score > maxscore:
                     bestparams = nbparams
-                    print("found params: %s step: %d score: %f" % (param_str(nbparams), stepfactor, score))
-                    print("cache info:", autoindex.search.cache_info())
+                    print("FOUND params: %s step: %d score: %f" % (param_str(nbparams), stepfactor, score))
+                    print("cache info:", autoindex.search.cache_info(), evaluate_document.cache_info())
                     maxscore = score
                     stepped = True
             if stepped:
@@ -112,7 +117,8 @@ if __name__ == '__main__':
     bestscore = 0.0
     for i in range(20):
         params, score = optimize(documents)
-        print("round %d params: %s score: %f" % (i, param_str(params), score))
+        print("*** round %d params: %s score: %f" % (i, param_str(params), score))
+        print()
         if score > bestscore:
             bestscore = score
             bestparams = params
