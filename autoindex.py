@@ -75,6 +75,16 @@ def autoindex_block(text, cutoff_frequency, limit, normalize):
     
     return scores
 
+def autoindex_block_merge(all_scores, text, cutoff_frequency, limit, normalize):
+    scores = autoindex_block(text, cutoff_frequency, limit, normalize)
+    # merge the results into the shared scoring dict
+    for uri, hitdata in scores.items():
+        if uri in all_scores:
+            all_scores[uri]['score'] += hitdata['score']
+        else:
+            all_scores[uri] = hitdata
+    
+
 def autoindex(text, min_block_length=15, cutoff_frequency=0.01, limit=30, normalize=True, threshold=None, maxhits=None):
     if isinstance(text, str):
         sentences = split_to_sentences(text)
@@ -105,14 +115,12 @@ def autoindex(text, min_block_length=15, cutoff_frequency=0.01, limit=30, normal
             evalblock = block
             # next evaluation starts with an empty block
             block = None
-            
-        scores = autoindex_block(evalblock, cutoff_frequency, limit, normalize)
-        # merge the results into the shared scoring dict
-        for uri, hitdata in scores.items():
-            if uri in all_scores:
-                all_scores[uri]['score'] += hitdata['score']
-            else:
-                all_scores[uri] = hitdata
+
+        autoindex_block_merge(all_scores, evalblock, cutoff_frequency, limit, normalize)
+    
+    if block is not None:
+        # process the remainder
+        autoindex_block_merge(all_scores, block, cutoff_frequency, limit, normalize)
         
     scores = list(all_scores.values())
     scores.sort(key=lambda c:c['score'], reverse=True)
