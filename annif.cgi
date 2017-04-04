@@ -15,7 +15,7 @@ text = form.getfirst('text')
 
 if text is not None:
     # autoindex mode
-    results = autoindex.autoindex(text, threshold=0.2, maxhits=20)
+    results = autoindex.autoindex(text, threshold=0.45, maxhits=12)
     print(json.dumps(results))
     sys.exit()
 

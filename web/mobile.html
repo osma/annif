@@ -12,133 +12,50 @@
     <style type="text/css">
    
 #previewimg {
-/*    width: 100%; */
+    width: 100%;
 } 
 
 #previewtext {
     width: 100%;
-    height: 100%;
+    height: 10em;
 }    
     </style>
     <script>
 
-var backend_url = '/cgi-bin/annif.cgi';
-var MAX_WIDTH = 2000;
-var MAX_HEIGHT = 2000;
-var OCRAPIKEY = ""; // NOTE: insert ocr.space API key here
+var OCR_BACKEND_URL = '/cgi-bin/ocr.cgi';
+var ANNIF_BACKEND_URL = '/cgi-bin/annif.cgi';
 
 function handleImage(files) {
     var img = document.getElementById('previewimg');
     var reader = new FileReader();
     reader.onload = (function(aImg) { 
         return function(e) { 
-            aImg.onload = resize;
             aImg.src = e.target.result;
         };
     })(img);
     reader.readAsDataURL(files[0]);
-}
 
-function resize(ev) {
-    var img = document.getElementById('previewimg');
-    console.log(img);
-    var canvas = document.createElement('canvas');
-    var width = img.width;
-    var height = img.height;
-    console.log(img);
-    console.log([width, height]);
-    $('#info').text("width: " + width + " height:" + height);
-    if (width > height) {
-        if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-        }
-    } else {
-        if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-        }
-    }
-    canvas.width = width;
-    canvas.height = height;
-    console.log(canvas);
-    console.log([width, height]);
-    var ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, width, height);
-    
-    canvas.toBlob(ocr, "image/jpeg", 0.8);
-}
-
-function ocr(blob) {
-    console.log(blob);
-    var file = new File([blob], "blob.jpg");
-
-    //Prepare form data
     var formData = new FormData();
-    formData.append("file", file);
-    formData.append("language" , "fin");
-    formData.append("apikey", OCRAPIKEY);
-    formData.append("isOverlayRequired", false);
-    //Send OCR Parsing request asynchronously
+    formData.append("imagefile", files[0])
     jQuery.ajax({
-        url: "https://api.ocr.space/parse/image",
+        url: OCR_BACKEND_URL,
         data: formData,
-        dataType: 'json',
         cache: false,
         contentType: false,
         processData: false,
         type: 'POST',
-        error: function(jqxhr, textStatus, errorThrown) {
-            $('#info').text("ERROR status: " + textStatus + " error:" + errorThrown);
-        },
-        success: function (ocrParsedResult) {
-            //Get the parsed results, exit code and error message and details
-            var parsedResults = ocrParsedResult["ParsedResults"];
-            var ocrExitCode = ocrParsedResult["OCRExitCode"];
-            var isErroredOnProcessing = ocrParsedResult["IsErroredOnProcessing"];
-            var errorMessage = ocrParsedResult["ErrorMessage"];
-            var errorDetails = ocrParsedResult["ErrorDetails"];
-            var processingTimeInMilliseconds = ocrParsedResult["ProcessingTimeInMilliseconds"];
-            //If we have got parsed results, then loop over the results to do something
-            if (parsedResults!= null) {
-                //Loop through the parsed results
-                $.each(parsedResults, function (index, value) {
-                    var exitCode = value["FileParseExitCode"];
-                    var parsedText = value["ParsedText"];
-                    var errorMessage = value["ParsedTextFileName"];
-                    var errorDetails = value["ErrorDetails"];
-
-                    var textOverlay = value["TextOverlay"];
-                    var pageText = '';
-                    switch (+exitCode) {
-                        case 1:
-                            pageText = parsedText;
-                            break;
-                        case 0:
-                        case -10:
-                        case -20:
-                        case -30:
-                        case -99:
-                        default:
-                            pageText += "Error: " + errorDetails + " size:" + file.size + " type:" + file.type;
-                        break;
-                    }
-                    console.log(pageText);
-                    $('#previewtext').val(pageText);
-//                    $('#tabs').tabs({
-//                        active: 1
-//                    });
-                    $('a[href="#text"]').trigger("click");
-                    autoindex();
-                });
-            }
+        success: function (result) {
+            console.log(result);
+            $('#previewtext').val(result);
+            $('a[href="#text"]').trigger("click");
+            autoindex();
         }
     });
 }
 
 function autoindex() {
     $.ajax({
-        url: backend_url,
+        url: ANNIF_BACKEND_URL,
         method: 'POST',
         data: { text: $('#previewtext').val() },
         success: function(data) {
@@ -173,8 +90,7 @@ function autoindex() {
         </ul>
     </div>
     <div id="image" class="ui-content">
-        <input id="imageinput" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
-        <span id="info">info</span>
+        <input id="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
         <div id="preview">
           <img id="previewimg">
         </div>
