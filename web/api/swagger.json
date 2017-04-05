@@ -27,7 +27,7 @@
                         "type": "string"
                     },
                     {
-                        "name": "maxlimit",
+                        "name": "maxhits",
                         "in": "formData",
                         "description": "maximum number of results to return",
                         "required": false,
