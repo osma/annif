@@ -1,19 +1,17 @@
 <!DOCTYPE html>
-<html dir="ltr" lang="fi">
+<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<title>annif - automaattinen sisällönkuvailija Finna-korpuksella</title>
+<title>Annif - automaattinen sisällönkuvailija Finna-korpuksella</title>
 <style type="text/css">
-body {
-  font-family: sans-serif;
-}
 textarea {
   float: left;
   margin-right: 2em;
 }
 #results {
-  min-height: 40em;
+  min-height: 30em;
   margin-left: 3em;
   list-style-type: none;
 
@@ -76,7 +74,12 @@ $(document).ready(function() {
 
 </head>
 <body>
-<h1>annif - automaattinen sisällönkuvailija Finna-korpuksella</h1>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+
+<h1>Annif - automaattinen sisällönkuvailija Finna-korpuksella</h1>
 <label for="text">Kuvailtava teksti:</label><br>
 <textarea rows="80" cols="100" name="text" id="text">
 
@@ -88,6 +91,9 @@ $(document).ready(function() {
 <ul id="results">
 </ul>
 <input type="submit" name="teach" id="teach" value="Ilmoita valitut vääriksi">
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
