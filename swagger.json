@@ -1,0 +1,49 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Annif REST API",
+        "version": "v0"
+    },
+    "schemes": [
+        "http"
+    ],
+    "basePath": "/v0/",
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/autoindex": {
+            "post": {
+                "summary": "suggest subjects for a given text",
+                "parameters": [
+                    {
+                        "name": "text",
+                        "in": "query",
+                        "description": "input text",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "maxlimit",
+                        "in": "query",
+                        "description": "maximum number of results to return",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "threshold",
+                        "in": "query",
+                        "description": "minimum score threshold, expressed as a fraction of highest score, below which results will not be returned",
+                        "required": false,
+                        "type": "number"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        }
+    }
+}
