@@ -1,0 +1,4 @@
+RewriteEngine On
+
+RewriteRule ^v0/swagger.json$ swagger.json [L]
+RewriteRule ^v0/autoindex$ /cgi-bin/autoindex.cgi [L]
