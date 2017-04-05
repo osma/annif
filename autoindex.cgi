@@ -27,7 +27,7 @@ if text is not None:
     
     maxhits = form.getfirst('maxhits')
     if maxhits is not None:
-        maxhits = float(maxhits)
+        maxhits = int(maxhits)
     else:
         maxhits = DEFAULT_MAXHITS
     
