@@ -12,7 +12,7 @@ import configparser
 from PIL import Image
 
 config = configparser.ConfigParser()
-config.read('ocr.ini')
+config.read('/etc/annif/ocr.ini')
 
 api_options = config['api']
 
@@ -76,5 +76,8 @@ r = requests.post('https://api.ocr.space/parse/image', files={fn: f}, data=paylo
   
 results = r.json()
 
-text = results['ParsedResults'][0]['ParsedText']
-sys.stdout.buffer.write(text.encode('UTF-8') + b"\r\n")
+try:
+    text = results['ParsedResults'][0]['ParsedText']
+    sys.stdout.buffer.write(text.encode('UTF-8') + b"\r\n")
+except:
+    sys.stdout.buffer.write(b"error\r\n")
