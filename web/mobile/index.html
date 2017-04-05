@@ -34,7 +34,7 @@ function handleImage(files) {
         };
     })(img);
     reader.readAsDataURL(files[0]);
-
+    $.mobile.loading('show', { text: 'Tunnistetaan tekstiä...' });
     var formData = new FormData();
     formData.append("imagefile", files[0])
     jQuery.ajax({
@@ -54,6 +54,7 @@ function handleImage(files) {
 }
 
 function autoindex() {
+    $.mobile.loading('show', { text: 'Tunnistetaan aiheita...' });
     $.ajax({
         url: ANNIF_BACKEND_URL,
         method: 'POST',
@@ -68,6 +69,7 @@ function autoindex() {
                     )
                 );
             });
+            $.mobile.loading('hide');
             $('a[href="#topics"]').trigger("click");
         }
     });
