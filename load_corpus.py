@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
@@ -40,7 +40,7 @@ for file in files:
         continue
     f = open('corpus/%s' % file, 'r')
     uri, label = f.readline().strip().split(' ', 1)
-    print file, uri, label
+    print(file, uri, label)
     cid = uri.split('p')[-1]
     labels = f.readline().strip()
     text = labels + " " + "".join(f.readlines())
