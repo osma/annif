@@ -6,9 +6,19 @@ import re
 import os
 import os.path
 import time
+import sys
 
 FINTO_ENDPOINT='http://api.dev.finto.fi/sparql'
 FINNA_API_SEARCH='https://api.finna.fi/v1/search'
+
+lang = sys.argv[1]
+
+# map ISO 639-1 language codes into the ISO 639-2 codes that Finna uses
+LANGMAP = {
+  'fi': 'fin',
+  'sv': 'swe',
+  'en': 'eng'
+}
 
 def row_to_concept(row):
     concept = {'uri': row['c']['value'],
@@ -18,7 +28,7 @@ def row_to_concept(row):
         concept['alts'] = row['alts']['value']
     return concept
 
-def get_concepts():
+def get_concepts(lang):
     sparql = SPARQLWrapper(FINTO_ENDPOINT)
     sparql.setQuery("""
 PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
@@ -31,10 +41,10 @@ WHERE {
     ?c a skos:Concept .
     ?c skos:closeMatch|skos:exactMatch ?ysac .
     ?c skos:prefLabel ?pref .
-    FILTER(LANG(?pref)='en')
+    FILTER(LANG(?pref)='%s')
     OPTIONAL {
       ?c skos:altLabel ?alt .
-      FILTER(LANG(?alt)='en')
+      FILTER(LANG(?alt)='%s')
     }
     FILTER NOT EXISTS { ?c owl:deprecated true }
     FILTER NOT EXISTS { ?c a ysometa:Hierarchy }
@@ -45,12 +55,12 @@ WHERE {
 }
 GROUP BY ?c ?pref ?ysapref
 #LIMIT 500
-""")
+""" % (lang, lang))
     sparql.setReturnFormat(JSON)
     results = sparql.query().convert()
     return [row_to_concept(row) for row in results['results']['bindings']]
             
-concepts = get_concepts()
+concepts = get_concepts(lang)
 
 def search_finna(params):
     r = requests.get(FINNA_API_SEARCH, params=params, headers={'User-agent': 'annif 0.1'})
@@ -66,19 +76,24 @@ def records_to_texts(records):
                 texts.append(summary)
     return texts
 
-def generate_text(concept):
+def generate_text(concept, lang):
     # start with pref- and altlabels
+    labels = [concept['pref']]
+    if lang == 'fi':
+        # we can use the YSA label too
+        labels.append(concept['ysapref'])
     if 'alts' in concept:
-        labels = concept['pref'] + " " + concept['alts']
-    else:
-        labels = concept['pref']
+        labels.append(concept['alts'])
+    
+    labels = ' '.join(labels)
 
     # look for more text in Finna API
     texts = []
     fields = ['title','summary']
+    finnalang = LANGMAP[lang]
 
     # Search type 1: exact matches using topic facet
-    params = {'lookfor': 'topic_facet:%s' % concept['ysapref'], 'filter[]': 'language:eng', 'lng':'en', 'limit':100, 'field[]':fields}
+    params = {'lookfor': 'topic_facet:%s' % concept['ysapref'], 'filter[]': 'language:%s' % finnalang, 'lng':lang, 'limit':100, 'field[]':fields}
     response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
@@ -100,16 +115,16 @@ def generate_text(concept):
 
 for concept in concepts:
     localname = concept['uri'].split('/')[-1]
-    outfile = 'corpus/%s-en.raw' % localname
+    outfile = 'corpus/%s-%s.raw' % (localname, lang)
     if os.path.exists(outfile):
         continue
     try:
-        text = generate_text(concept)
+        text = generate_text(concept, lang)
     except:
         # try once more
         time.sleep(1)
-        text = generate_text(concept)
-    print(localname, concept['pref'], concept['ysapref'], len(text.split()))
+        text = generate_text(concept, lang)
+    print(localname, lang, concept['pref'], concept['ysapref'], len(text.split()))
     
     f = open(outfile, 'w')
     print (concept['uri'], concept['pref'], file=f)
