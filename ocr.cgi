@@ -17,7 +17,7 @@ config.read('/etc/annif/ocr.ini')
 api_options = config['api']
 
 OCRAPIKEY = api_options['apikey']
-OCRLANGUAGE = api_options['language']
+DEFAULT_LANGUAGE = api_options['default_language']
 
 MAXSIZE_BYTES = 1000000;
 MAXSIZE_PIXELS = (2600, 2600)
@@ -52,9 +52,13 @@ if 'imagefile' in form:
     if fileitem.file:
         f = fileitem.file
         fn = fileitem.filename
+    lang = form.getfirst('language')
+    if lang is None:
+        lang = DEFAULT_LANGUAGE
 else:
-    # take the filename as a command line parameter - for testing
-    fn = sys.argv[1]
+    # take the language and filename as command line parameters - for testing
+    lang = sys.argv[1]
+    fn = sys.argv[2]
     f = open(fn, 'rb')
 
 image = image_transpose_exif(Image.open(f))
@@ -69,7 +73,7 @@ if image.size[0] > MAXSIZE_PIXELS[0] or image.size[1] > MAXSIZE_PIXELS[1]:
 payload = {
     'isOverlayRequired': False,
     'apikey': OCRAPIKEY,
-    'language': OCRLANGUAGE
+    'language': lang
 }
 
 r = requests.post('https://api.ocr.space/parse/image', files={fn: f}, data=payload)

@@ -28,7 +28,8 @@ var ANNIF_BACKEND_URL = '/cgi-bin/autoindex.cgi';
 function handleImage(files) {
     $.mobile.loading('show', { text: 'Tunnistetaan tekstiä...' });
     var formData = new FormData();
-    formData.append("imagefile", files[0])
+    formData.append("imagefile", files[0]);
+    formData.append("language", "fin");
     jQuery.ajax({
         url: OCR_BACKEND_URL,
         data: formData,
