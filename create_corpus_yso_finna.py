@@ -127,12 +127,23 @@ for concept in concepts:
     outfile = 'corpus/%s-%s.raw' % (localname, lang)
     if os.path.exists(outfile):
         continue
-    try:
-        text = generate_text(concept, lang)
-    except:
-        # try once more
-        time.sleep(1)
-        text = generate_text(concept, lang)
+
+    text = None
+    tries = 0
+    while tries < 10:
+      try:
+          text = generate_text(concept, lang)
+          break
+      except:
+          # failure, try again until tries exhausted
+          tries += 1
+          print("Error generating text for concept %s, trying again (attempt %d)" % (concept['uri'], tries))
+          time.sleep(tries) # wait progressively longer between attempts
+
+    if text is None:
+        print("Failed looking up concept %s, exiting" % concept['uri'])
+        sys.exit(1)
+
     print(localname, lang, concept['pref'], concept['ysapref'], concept['allarspref'], len(text.split()))
     
     f = open(outfile, 'w')
