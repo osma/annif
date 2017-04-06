@@ -1,6 +1,6 @@
 # Filter all corpus/*.txt files
 
-all: $(patsubst %.txt,%.fi,$(wildcard corpus/*.txt))
+all: $(patsubst %.raw,%.txt,$(wildcard corpus/*.raw))
 
-%.fi: %.txt
-	./filter_corpus.py <$^ >$@
+%.txt: %.raw
+	./filter_corpus.py $(lastword $(subst -, ,$(@:%.txt=%))) <$^ >$@

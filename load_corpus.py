@@ -36,7 +36,7 @@ index.create(index='yso', body=indexconf)
 
 files = os.listdir('corpus')
 for file in files:
-    if not file.endswith('.fi'):
+    if not file.endswith('-fi.txt'):
         continue
     f = open('corpus/%s' % file, 'r')
     uri, label = f.readline().strip().split(' ', 1)

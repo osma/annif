@@ -100,7 +100,7 @@ def generate_text(concept):
 
 for concept in concepts:
     localname = concept['uri'].split('/')[-1]
-    outfile = 'corpus/%s-eng.txt' % localname
+    outfile = 'corpus/%s-en.raw' % localname
     if os.path.exists(outfile):
         continue
     try:
