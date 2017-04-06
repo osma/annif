@@ -45,6 +45,6 @@ for file in files:
     labels = f.readline().strip()
     text = labels + " " + "".join(f.readlines())
     text = re.sub(r'\b\d+\b', '', text) # strip words that consist of only numbers
-    body = {'uri': uri, 'label': label, 'labels': labels, 'text': text, 'boost': 1}
-    es.index(index='yso', doc_type='concept', id=cid, body=body)
+    body = {'doc': {'uri': uri, 'label': label, 'labels': labels, 'text': text, 'boost': 1}, 'doc_as_upsert': True}
+    es.update(index='yso', doc_type='concept', id=cid, body=body)
     f.close()
