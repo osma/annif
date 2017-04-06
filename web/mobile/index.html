@@ -10,6 +10,10 @@
     <script
     src="https://code.jquery.com/mobile/1.5.0-alpha.1/jquery.mobile-1.5.0-alpha.1.min.js"></script>
     <style type="text/css">
+
+.ui-content {
+    padding: 0;
+}
    
 #previewimg {
     width: 100%;
@@ -21,14 +25,23 @@
 }    
 
 .ui-block-a.main {
-    width: 75%;
-    padding-top: 1em;
+    width: 65%;
 }
 
 .ui-block-b.side {
     padding-left: 1em;
-    width: 25%;
+    width: 35%;
 }
+
+.languageselector {
+    margin: 0;
+    padding: 0;
+}
+
+.ui-button {
+    font-size: 12px;
+}
+
     </style>
     <script>
 
@@ -107,7 +120,7 @@ function autoindex() {
             </div>
 
             <div class="ui-block-b side">
-                <div class="ui-field-contain">
+                <div class="ui-field-contain languageselector">
                   <label for="language" class="select">Kieli:</label>
                   <select name="language" id="language">
                     <option value="fi">suomi</option>
