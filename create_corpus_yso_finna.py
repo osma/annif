@@ -23,7 +23,8 @@ LANGMAP = {
 def row_to_concept(row):
     concept = {'uri': row['c']['value'],
                'pref': row['pref']['value'],
-               'ysapref': row['ysapref']['value']}
+               'ysapref': row['ysapref']['value'],
+               'allarspref': row['allarspref']['value']}
     if 'alts' in row:
         concept['alts'] = row['alts']['value']
     return concept
@@ -35,11 +36,10 @@ PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX ysometa: <http://www.yso.fi/onto/yso-meta/>
 
-SELECT ?c ?pref (GROUP_CONCAT(?alt) AS ?alts) ?ysapref
+SELECT ?c ?pref (GROUP_CONCAT(?alt) AS ?alts) ?ysapref ?allarspref
 WHERE {
   GRAPH <http://www.yso.fi/onto/yso/> {
     ?c a skos:Concept .
-    ?c skos:closeMatch|skos:exactMatch ?ysac .
     ?c skos:prefLabel ?pref .
     FILTER(LANG(?pref)='%s')
     OPTIONAL {
@@ -50,10 +50,15 @@ WHERE {
     FILTER NOT EXISTS { ?c a ysometa:Hierarchy }
   }
   GRAPH <http://www.yso.fi/onto/ysa/> {
+    ?ysac skos:closeMatch|skos:exactMatch ?c .
     ?ysac skos:prefLabel ?ysapref .
   }
+  GRAPH <http://www.yso.fi/onto/allars/> {
+    ?allarsc skos:closeMatch|skos:exactMatch ?c .
+    ?allarsc skos:prefLabel ?allarspref .
+  }
 }
-GROUP BY ?c ?pref ?ysapref
+GROUP BY ?c ?pref ?ysapref ?allarspref
 #LIMIT 500
 """ % (lang, lang))
     sparql.setReturnFormat(JSON)
@@ -82,6 +87,9 @@ def generate_text(concept, lang):
     if lang == 'fi':
         # we can use the YSA label too
         labels.append(concept['ysapref'])
+    if lang == 'sv':
+        # we can use the Allars label too
+        labels.append(concept['allarspref'])
     if 'alts' in concept:
         labels.append(concept['alts'])
     
@@ -90,23 +98,24 @@ def generate_text(concept, lang):
     # look for more text in Finna API
     texts = []
     fields = ['title','summary']
+    finnaterms = (concept['ysapref'], concept['allarspref'])
     finnalang = LANGMAP[lang]
 
     # Search type 1: exact matches using topic facet
-    params = {'lookfor': 'topic_facet:%s' % concept['ysapref'], 'filter[]': 'language:%s' % finnalang, 'lng':lang, 'limit':100, 'field[]':fields}
+    params = {'lookfor': 'topic_facet:"%s" OR topic_facet:"%s"' % finnaterms, 'filter[]': 'language:%s' % finnalang, 'lng':lang, 'limit':100, 'field[]':fields}
     response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
         
     # Search type 2: exact matches using Subject search
-    params['lookfor'] = '"%s"' % concept['ysapref']
+    params['lookfor'] = '"%s" OR "%s"' % finnaterms
     params['type'] = 'Subject'
     response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
 
     # Search type 3: fuzzy matches using Subject search
-    params['lookfor'] = concept['ysapref']
+    params['lookfor'] = '(%s) OR (%s)' % finnaterms
     response = search_finna(params)
     if 'records' in response:
         texts += records_to_texts(response['records'])
@@ -124,7 +133,7 @@ for concept in concepts:
         # try once more
         time.sleep(1)
         text = generate_text(concept, lang)
-    print(localname, lang, concept['pref'], concept['ysapref'], len(text.split()))
+    print(localname, lang, concept['pref'], concept['ysapref'], concept['allarspref'], len(text.split()))
     
     f = open(outfile, 'w')
     print (concept['uri'], concept['pref'], file=f)
