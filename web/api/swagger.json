@@ -27,18 +27,28 @@
                         "type": "string"
                     },
                     {
+                        "name": "language",
+                        "in": "formData",
+                        "description": "language of input text",
+                        "required": false,
+                        "type": "string",
+                        "default": "en"
+                    },
+                    {
                         "name": "maxhits",
                         "in": "formData",
                         "description": "maximum number of results to return",
                         "required": false,
-                        "type": "integer"
+                        "type": "integer",
+                        "default": 12
                     },
                     {
                         "name": "threshold",
                         "in": "formData",
                         "description": "minimum score threshold, expressed as a fraction of highest score, below which results will not be returned",
                         "required": false,
-                        "type": "number"
+                        "type": "number",
+                        "default": 0.45
                     }
                 ],
                 "responses": {
