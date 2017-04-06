@@ -33,7 +33,7 @@ def split_to_sentences(text):
     return sentences
 
 @functools.lru_cache(maxsize=100000)
-def search(text, cutoff_frequency):
+def search(text, lang, cutoff_frequency):
     es = Elasticsearch()
 
     query = {
@@ -41,7 +41,7 @@ def search(text, cutoff_frequency):
             'function_score': {
                 'query': {
                     'common': {
-                        'text': {
+                        'text_%s' % lang: {
                             'query': text,
                             'cutoff_frequency': cutoff_frequency
                         }
@@ -57,17 +57,17 @@ def search(text, cutoff_frequency):
         }
     }
 
-    return es.search(index='yso', doc_type='concept', body=query, size=40, _source=['uri','label'])
+    return es.search(index='yso', doc_type='concept', body=query, size=40, _source=['uri','label_%s' % lang])
 
-def autoindex_block(text, cutoff_frequency, limit, normalize):
+def autoindex_block(text, lang, cutoff_frequency, limit, normalize):
     scores = {}
-    res = search(text, cutoff_frequency)
+    res = search(text, lang, cutoff_frequency)
     maxscore = None
     for hit in res['hits']['hits'][:limit]:
         if maxscore is None:
             maxscore = hit['_score'] # score of best hit
         uri = hit['_source']['uri']
-        scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label'], 'score': 0})
+        scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label_%s' % lang], 'score': 0})
         if normalize:
             scores[uri]['score'] += hit['_score'] / maxscore
         else:
@@ -75,8 +75,8 @@ def autoindex_block(text, cutoff_frequency, limit, normalize):
     
     return scores
 
-def autoindex_block_merge(all_scores, text, cutoff_frequency, limit, normalize):
-    scores = autoindex_block(text, cutoff_frequency, limit, normalize)
+def autoindex_block_merge(all_scores, text, lang, cutoff_frequency, limit, normalize):
+    scores = autoindex_block(text, lang, cutoff_frequency, limit, normalize)
     # merge the results into the shared scoring dict
     for uri, hitdata in scores.items():
         if uri in all_scores:
@@ -85,7 +85,7 @@ def autoindex_block_merge(all_scores, text, cutoff_frequency, limit, normalize):
             all_scores[uri] = hitdata
     
 
-def autoindex(text, min_block_length=20, cutoff_frequency=0.009, limit=34, normalize=True, threshold=None, maxhits=None):
+def autoindex(text, language, min_block_length=20, cutoff_frequency=0.009, limit=34, normalize=True, threshold=None, maxhits=None):
     if isinstance(text, str):
         sentences = split_to_sentences(text)
     else:
@@ -116,11 +116,11 @@ def autoindex(text, min_block_length=20, cutoff_frequency=0.009, limit=34, norma
             # next evaluation starts with an empty block
             block = None
 
-        autoindex_block_merge(all_scores, evalblock, cutoff_frequency, limit, normalize)
+        autoindex_block_merge(all_scores, evalblock, language, cutoff_frequency, limit, normalize)
     
     if block is not None:
         # process the remainder
-        autoindex_block_merge(all_scores, block, cutoff_frequency, limit, normalize)
+        autoindex_block_merge(all_scores, block, language, cutoff_frequency, limit, normalize)
         
     scores = list(all_scores.values())
     scores.sort(key=lambda c:c['score'], reverse=True)
@@ -133,7 +133,8 @@ def autoindex(text, min_block_length=20, cutoff_frequency=0.009, limit=34, norma
 
 if __name__ == '__main__':
     text = sys.stdin.read().strip()
+    lang = sys.argv[1]
 
-    scores = autoindex(split_to_sentences(text), threshold=0.2, maxhits=20)
+    scores = autoindex(split_to_sentences(text), lang, threshold=0.2, maxhits=20)
     for c in scores[:100]:
         print(c['score'], c['uri'], c['label'])

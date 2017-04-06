@@ -15,13 +15,19 @@ indexconf = {
     'mappings': {
         'concept': {
             'properties': {
-                'labels': {
-                    'type': 'text',
-                    'analyzer': 'finnish'
-                },
-                'text': {
+                'text_fi': {
                     'type': 'text',
                     'analyzer': 'finnish',
+                    'term_vector': 'yes'
+                },
+                'text_sv': {
+                    'type': 'text',
+                    'analyzer': 'swedish',
+                    'term_vector': 'yes'
+                },
+                'text_en': {
+                    'type': 'text',
+                    'analyzer': 'english',
                     'term_vector': 'yes'
                 },
                 'boost': {
@@ -36,15 +42,16 @@ index.create(index='yso', body=indexconf)
 
 files = os.listdir('corpus')
 for file in files:
-    if not file.endswith('-fi.txt'):
+    match = re.match(r'.*-(\w+).txt', file)
+    if not match:
         continue
+    lang = match.group(1)
     f = open('corpus/%s' % file, 'r')
     uri, label = f.readline().strip().split(' ', 1)
-    print(file, uri, label)
+    print(file, lang, uri, label)
     cid = uri.split('p')[-1]
-    labels = f.readline().strip()
-    text = labels + " " + "".join(f.readlines())
+    text = " ".join(f.readlines())
     text = re.sub(r'\b\d+\b', '', text) # strip words that consist of only numbers
-    body = {'doc': {'uri': uri, 'label': label, 'labels': labels, 'text': text, 'boost': 1}, 'doc_as_upsert': True}
+    body = {'doc': {'uri': uri, 'label_%s' % lang: label, 'text_%s' % lang: text, 'boost': 1}, 'doc_as_upsert': True}
     es.update(index='yso', doc_type='concept', id=cid, body=body)
     f.close()

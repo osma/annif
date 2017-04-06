@@ -7,6 +7,7 @@ import sys
 import autoindex
 import conceptboost
 
+DEFAULT_LANGUAGE="en"
 DEFAULT_THRESHOLD=0.45
 DEFAULT_MAXHITS=12
 
@@ -18,6 +19,10 @@ text = form.getfirst('text')
 
 if text is not None:
     # autoindex mode
+    
+    language = form.getfirst('language')
+    if language is None:
+        language = DEFAULT_LANGUAGE
     
     threshold = form.getfirst('threshold')
     if threshold is not None:
@@ -31,7 +36,7 @@ if text is not None:
     else:
         maxhits = DEFAULT_MAXHITS
     
-    results = autoindex.autoindex(text, threshold=threshold, maxhits=maxhits)
+    results = autoindex.autoindex(text, language, threshold=threshold, maxhits=maxhits)
     print(json.dumps(results))
     sys.exit()
 

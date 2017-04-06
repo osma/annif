@@ -29,7 +29,10 @@ function autoindex() {
     $.ajax({
         url: backend_url,
         method: 'POST',
-        data: { text: $('#text').val() },
+        data: { 
+          text: $('#text').val(),
+          language: $('#language').val()
+        },
         success: function(data) {
             $.each(data, function(idx, value) {
                 $('#results').append(
@@ -85,7 +88,15 @@ $(document).ready(function() {
 
 </textarea>
 <div>
+<label for="language">Kieli:</label>
+<select name="language" id="language">
+  <option value="fi">suomi</option>
+  <option value="sv">ruotsi</option>
+  <option value="en">englanti</option>
+</select>
+
 <input type="submit" name="submit" id="submit" value="Analysoi">
+
 </div>
 <h2>Tulokset</h2>
 <ul id="results">

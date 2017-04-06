@@ -58,7 +58,7 @@ function autoindex() {
     $.ajax({
         url: ANNIF_BACKEND_URL,
         method: 'POST',
-        data: { text: $('#previewtext').val() },
+        data: { text: $('#previewtext').val(), language: 'fi' },
         success: function(data) {
             $('#results').empty();
             $.each(data, function(idx, value) {
