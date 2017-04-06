@@ -36,11 +36,10 @@ seen = set()
 targetlang = sys.argv[1]
 for line in sys.stdin.readlines():
     line = line.strip().decode('UTF-8')
-    if first:
+    if first: # first line contains URI and label, pass it through
         first = False
-        if line[0].lower() == line[0]: # altlabels probably
-            print line.encode('UTF-8')
-            continue
+        print line.encode('UTF-8')
+        continue
     if line == '':
         continue
     if line in seen:
