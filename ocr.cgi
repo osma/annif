@@ -22,6 +22,13 @@ DEFAULT_LANGUAGE = api_options['default_language']
 MAXSIZE_BYTES = 1000000;
 MAXSIZE_PIXELS = (2600, 2600)
 
+# map ISO 639-1 language codes into the ISO 639-3 codes that ocr.space uses
+LANGMAP = {
+  'fi': 'fin',
+  'sv': 'swe',
+  'en': 'eng'
+}
+
 sys.stdout.buffer.write(b"Content-Type: text/plain; charset=utf-8\r\n")
 sys.stdout.buffer.write(b"\r\n")
 
@@ -55,6 +62,9 @@ if 'imagefile' in form:
     lang = form.getfirst('language')
     if lang is None:
         lang = DEFAULT_LANGUAGE
+    if lang in LANGMAP:
+        # map to ISO 639-3 code
+        lang = LANGMAP[lang]
 else:
     # take the language and filename as command line parameters - for testing
     lang = sys.argv[1]

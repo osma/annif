@@ -19,6 +19,16 @@
     width: 100%;
     height: 10em;
 }    
+
+.ui-block-a.main {
+    width: 75%;
+    padding-top: 1em;
+}
+
+.ui-block-b.side {
+    padding-left: 1em;
+    width: 25%;
+}
     </style>
     <script>
 
@@ -29,7 +39,7 @@ function handleImage(files) {
     $.mobile.loading('show', { text: 'Tunnistetaan tekstiä...' });
     var formData = new FormData();
     formData.append("imagefile", files[0]);
-    formData.append("language", "fin");
+    formData.append("language", $('#language').val());
     jQuery.ajax({
         url: OCR_BACKEND_URL,
         data: formData,
@@ -59,7 +69,7 @@ function autoindex() {
     $.ajax({
         url: ANNIF_BACKEND_URL,
         method: 'POST',
-        data: { text: $('#previewtext').val(), language: 'fi' },
+        data: { text: $('#previewtext').val(), language: $('#language').val() },
         success: function(data) {
             $('#results').empty();
             $.each(data, function(idx, value) {
@@ -86,12 +96,30 @@ function autoindex() {
 
 <div data-role="tabs" id="tabs">
     <div data-role="navbar">
-        <ul>
-          <li><a href="#image" data-theme="a" data-ajax="false">Kuva</a></li>
-          <li><a href="#text" data-theme="a" data-ajax="false">Teksti</a></li>
-          <li><a href="#topics" data-theme="a" data-ajax="false">Aiheet</a></li>
-        </ul>
+        <div class="ui-grid-a">
+        
+            <div class="ui-block-a main">
+                <ul>
+                  <li><a href="#image" data-theme="a" data-ajax="false">Kuva</a></li>
+                  <li><a href="#text" data-theme="a" data-ajax="false">Teksti</a></li>
+                  <li><a href="#topics" data-theme="a" data-ajax="false">Aiheet</a></li>
+                </ul>
+            </div>
+
+            <div class="ui-block-b side">
+                <div class="ui-field-contain">
+                  <label for="language" class="select">Kieli:</label>
+                  <select name="language" id="language">
+                    <option value="fi">suomi</option>
+                    <option value="sv">ruotsi</option>
+                    <option value="en">englanti</option>
+                  </select>
+                </div>
+            </div>
+
+        </div>
     </div>
+
     <div id="image" class="ui-content">
         <input id="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
         <div id="preview">
