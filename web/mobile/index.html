@@ -26,14 +26,6 @@ var OCR_BACKEND_URL = '/cgi-bin/ocr.cgi';
 var ANNIF_BACKEND_URL = '/cgi-bin/autoindex.cgi';
 
 function handleImage(files) {
-    var img = document.getElementById('previewimg');
-    var reader = new FileReader();
-    reader.onload = (function(aImg) { 
-        return function(e) { 
-            aImg.src = e.target.result;
-        };
-    })(img);
-    reader.readAsDataURL(files[0]);
     $.mobile.loading('show', { text: 'Tunnistetaan tekstiä...' });
     var formData = new FormData();
     formData.append("imagefile", files[0])
@@ -51,6 +43,14 @@ function handleImage(files) {
             autoindex();
         }
     });
+    var img = document.getElementById('previewimg');
+    var reader = new FileReader();
+    reader.onload = (function(aImg) { 
+        return function(e) { 
+            aImg.src = e.target.result;
+        };
+    })(img);
+    reader.readAsDataURL(files[0]);
 }
 
 function autoindex() {
