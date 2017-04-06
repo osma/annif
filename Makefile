@@ -2,6 +2,6 @@
 
 all: $(patsubst %.raw,%.txt,$(wildcard corpus/*.raw))
 
+# the $(lastword ...) expression extracts the target language (e.g. "fi") from the file name
 %.txt: %.raw
-	# the expression extracts the target language (e.g. "fi") from the file name
 	./filter_corpus.py $(lastword $(subst -, ,$(@:%.txt=%))) <$^ >$@
