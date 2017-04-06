@@ -55,7 +55,10 @@
                     "200": {
                         "description": "successful operation"
                     }
-                }
+                },
+                "tags": [
+                    "Automatic subject indexing"
+                ]
             }
         }
     }
