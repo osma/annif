@@ -68,7 +68,8 @@ if image.size[0] > MAXSIZE_PIXELS[0] or image.size[1] > MAXSIZE_PIXELS[1]:
     image.thumbnail(MAXSIZE_PIXELS)
     f = io.BytesIO()
     image.save(f, 'JPEG')
-    f.seek(0)
+
+f.seek(0)
 
 payload = {
     'isOverlayRequired': False,
