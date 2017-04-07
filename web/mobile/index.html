@@ -15,30 +15,29 @@
     padding: 0;
 }
    
+.ui-block-a {
+    padding-right: 0.25em;
+}
+
+.ui-block-b {
+    padding-left: 0.25em;
+}
+
 #previewimg {
     width: 100%;
 } 
 
-#previewtext {
+textarea#previewtext {
     width: 100%;
-    height: 10em;
+    height: 25em !important;
 }    
 
 label.select {
     display: none;
 }
 
-.ui-block-a.main {
-    width: 40%;
-}
-
-.ui-block-b.side {
-    padding-left: 1em;
-    width: 60%;
-}
-
 .languageselector {
-    margin: 0;
+    margin: 0.5em 0;
     padding: 0;
 }
 
@@ -123,11 +122,11 @@ function autoindex() {
     <div id="image" class="ui-content">
             <div class="ui-grid-a">
 
-                <div class="ui-block-a main">
+                <div class="ui-block-a">
                     <input id="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
                 </div>
 
-                <div class="ui-block-b side">
+                <div class="ui-block-b">
                     <div class="ui-field-contain languageselector">
                       <label for="language" class="select">Language:</label>
                       <select name="language" id="language">
