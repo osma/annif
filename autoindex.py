@@ -11,23 +11,22 @@ FINNISH = re.compile(r'\b(ja|joka|oli|kuin|jossa|jotka|jonka)\b')
 SWEDISH = re.compile(r'\b(och|med|som|att|den|det|eller|av)\b')
 ENGLISH = re.compile(r'\b(and|of|for|at|the)\b')
 
-
-def is_finnish(text):
+def is_in_language(targetlang, text):
     # Quick and dirty regex shortcuts for detecting the most common languages
     if FINNISH.search(text) is not None:
-        return True
+        return (targetlang == 'fi')
     if SWEDISH.search(text) is not None:
-        return False
+        return (targetlang == 'sv')
     if ENGLISH.search(text) is not None:
-        return False
-    # assume Finnish
+        return (targetlang == 'en')
+    # assume it's the right language
     return True
 
 sentence_tokenizer = nltk.data.load('tokenizers/punkt/english.pickle') 
-def split_to_sentences(text):
+def split_to_sentences(text, targetlang):
     sentences = []
     for sentence in sentence_tokenizer.tokenize(text):
-        if not is_finnish(sentence):
+        if not is_in_language(targetlang, sentence):
             continue
         sentences.append(sentence)
     return sentences
@@ -87,7 +86,7 @@ def autoindex_block_merge(all_scores, text, lang, cutoff_frequency, limit, norma
 
 def autoindex(text, language, min_block_length=20, cutoff_frequency=0.009, limit=34, normalize=True, threshold=None, maxhits=None):
     if isinstance(text, str):
-        sentences = split_to_sentences(text)
+        sentences = split_to_sentences(text, language)
     else:
         sentences = text
     all_scores = {}
@@ -135,6 +134,6 @@ if __name__ == '__main__':
     text = sys.stdin.read().strip()
     lang = sys.argv[1]
 
-    scores = autoindex(split_to_sentences(text), lang, threshold=0.2, maxhits=20)
+    scores = autoindex(split_to_sentences(text, lang), lang, threshold=0.2, maxhits=20)
     for c in scores[:100]:
         print(c['score'], c['uri'], c['label'])
