@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <title>annif mobile</title>
+    <title>Annif Mobile</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet"
@@ -24,13 +24,17 @@
     height: 10em;
 }    
 
+label.select {
+    display: none;
+}
+
 .ui-block-a.main {
-    width: 65%;
+    width: 40%;
 }
 
 .ui-block-b.side {
     padding-left: 1em;
-    width: 35%;
+    width: 60%;
 }
 
 .languageselector {
@@ -88,7 +92,6 @@ function autoindex() {
             $.each(data, function(idx, value) {
                 $('#results').append(
                     $('<li>').append(
-//                        $('<input type="checkbox" name="uri">').attr('value', value.uri),
                         $('<a>').attr('href',value.uri).append(value.label)
                     )
                 );
@@ -108,33 +111,36 @@ function autoindex() {
         <div role="main" class="ui-content">
 
 <div data-role="tabs" id="tabs">
-    <div data-role="navbar">
-        <div class="ui-grid-a">
-        
-            <div class="ui-block-a main">
-                <ul>
-                  <li><a href="#image" data-theme="a" data-ajax="false">Kuva</a></li>
-                  <li><a href="#text" data-theme="a" data-ajax="false">Teksti</a></li>
-                  <li><a href="#topics" data-theme="a" data-ajax="false">Aiheet</a></li>
-                </ul>
-            </div>
-
-            <div class="ui-block-b side">
-                <div class="ui-field-contain languageselector">
-                  <label for="language" class="select">Kieli:</label>
-                  <select name="language" id="language">
-                    <option value="fi">suomi</option>
-                    <option value="sv">ruotsi</option>
-                    <option value="en">englanti</option>
-                  </select>
-                </div>
-            </div>
-
+        <div data-role="navbar">
+    <ul>
+      <li><a href="#image" data-theme="a" data-ajax="false">Picture</a></li>
+      <li><a href="#text" data-theme="a" data-ajax="false">Text</a></li>
+      <li><a href="#topics" data-theme="a" data-ajax="false">Topics</a></li>
+    </ul>
         </div>
-    </div>
+
 
     <div id="image" class="ui-content">
-        <input id="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
+            <div class="ui-grid-a">
+
+                <div class="ui-block-a main">
+                    <input id="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
+                </div>
+
+                <div class="ui-block-b side">
+                    <div class="ui-field-contain languageselector">
+                      <label for="language" class="select">Language:</label>
+                      <select name="language" id="language">
+                        <option value="fi">Finnish</option>
+                        <option value="sv">Swedish</option>
+                        <option value="en">English</option>
+                      </select>
+                    </div>
+                </div>
+
+            </div>
+
+
         <div id="preview">
           <img id="previewimg">
         </div>
