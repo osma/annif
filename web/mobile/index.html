@@ -108,7 +108,7 @@ function autoindex() {
             });
             $.mobile.loading('hide');
             $('a[href="#topics"]').trigger("click");
-            var labellist = labels.join(", ");
+            var labellist = labels.join(". ");
             responsiveVoice.speak(labellist, VOICE_PER_LANGUAGE[$('#language').val()]);
         }
     });
