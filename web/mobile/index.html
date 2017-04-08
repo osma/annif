@@ -9,6 +9,7 @@
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script
     src="https://code.jquery.com/mobile/1.5.0-alpha.1/jquery.mobile-1.5.0-alpha.1.min.js"></script>
+    <script src='https://code.responsivevoice.org/responsivevoice.js'></script>
     <style type="text/css">
 
 .ui-content {
@@ -27,11 +28,6 @@
     width: 100%;
 } 
 
-textarea#previewtext {
-    width: 100%;
-    height: 25em !important;
-}    
-
 label.select {
     display: none;
 }
@@ -45,14 +41,26 @@ label.select {
     font-size: 12px;
 }
 
+#responsivevoiceattribution {
+    float: right;
+    padding: 0.2em;
+}
+
     </style>
     <script>
 
 var OCR_BACKEND_URL = '/cgi-bin/ocr.cgi';
 var ANNIF_BACKEND_URL = '/cgi-bin/autoindex.cgi';
 
+// which voice setting to use for Responsive Voice synthesis, per language
+var VOICE_PER_LANGUAGE = {
+    fi: "Finnish Female",
+    sv: "Swedish Female",
+    en: "UK English Female"
+}
+
 function handleImage(files) {
-    $.mobile.loading('show', { text: 'Tunnistetaan tekstiä...' });
+    $.mobile.loading('show');
     var formData = new FormData();
     formData.append("imagefile", files[0]);
     formData.append("language", $('#language').val());
@@ -65,7 +73,8 @@ function handleImage(files) {
         type: 'POST',
         success: function (result) {
             console.log(result);
-            $('#previewtext').val(result);
+            $('#previewtext').val(result)
+            $('#previewtext').keyup();
             $('a[href="#text"]').trigger("click");
             autoindex();
         }
@@ -81,22 +90,26 @@ function handleImage(files) {
 }
 
 function autoindex() {
-    $.mobile.loading('show', { text: 'Tunnistetaan aiheita...' });
+    $.mobile.loading('show');
     $.ajax({
         url: ANNIF_BACKEND_URL,
         method: 'POST',
         data: { text: $('#previewtext').val(), language: $('#language').val() },
         success: function(data) {
             $('#results').empty();
+            var labels = [];
             $.each(data, function(idx, value) {
                 $('#results').append(
                     $('<li>').append(
                         $('<a>').attr('href',value.uri).append(value.label)
                     )
                 );
+                labels.push(value.label);
             });
             $.mobile.loading('hide');
             $('a[href="#topics"]').trigger("click");
+            var labellist = labels.join(", ");
+            responsiveVoice.speak(labellist, VOICE_PER_LANGUAGE[$('#language').val()]);
         }
     });
 }
@@ -106,8 +119,9 @@ function autoindex() {
 </head>
 <body>
     <div data-role="page">
- 
-        <div role="main" class="ui-content">
+    
+
+        <div data-role="main" class="ui-content">
 
 <div data-role="tabs" id="tabs">
         <div data-role="navbar">
@@ -155,10 +169,14 @@ function autoindex() {
     </div>
 </div>
 
-
-
-
         </div><!-- /content -->
+        <div data-role="toolbar" data-type="footer" data-position="fixed">
+
+<div id="responsivevoiceattribution">
+<div style="width:300px;vertical-align:top;font-family: Arial;font-size:9pt;line-height: normal">
+<a rel="license" href="//responsivevoice.org/"><img title="ResponsiveVoice Text To Speech" src="https://responsivevoice.org/wp-content/uploads/2014/08/120x31.png" style="float:left;padding-right:2px" /></a><span xmlns:dct="https://purl.org/dc/terms/" property="dct:title"><a href="//responsivevoice.org/" target="_blank" title="ResponsiveVoice Text To Speech">ResponsiveVoice</a></span> used under <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License">Non-Commercial License</a></div>
+</div>
+       </div>
  
     </div><!-- /page -->
 </body>
