@@ -59,6 +59,14 @@ var VOICE_PER_LANGUAGE = {
     en: "UK English Female"
 }
 
+$(function() {
+    $("#tabs").tabs({
+        activate: function(event, ui) {
+            responsiveVoice.cancel();
+        }
+    });
+});
+
 function handleImage(files) {
     $.mobile.loading('show');
     var formData = new FormData();
@@ -72,7 +80,6 @@ function handleImage(files) {
         processData: false,
         type: 'POST',
         success: function (result) {
-            console.log(result);
             $('#previewtext').val(result)
             $('#previewtext').keyup();
             $('a[href="#text"]').trigger("click");
