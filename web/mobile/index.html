@@ -24,6 +24,19 @@
     padding-left: 0.25em;
 }
 
+.imagefileblock .ui-textinput-text {
+    border-style: none;
+}
+
+#imagefile {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+
 #previewimg {
     width: 100%;
 } 
@@ -143,8 +156,10 @@ function autoindex() {
     <div id="image" class="ui-content">
             <div class="ui-grid-a">
 
-                <div class="ui-block-a">
-                    <input id="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
+                <div class="ui-block-a imagefileblock">
+                    <input id="imagefile" name="imagefile" type="file" accept="image/*" capture="camera" onchange="handleImage(this.files)">
+                    <label for="imagefile" data-role="button" data-theme="b"
+                    data-icon="ui-icon-camera">Take a picture</label>
                 </div>
 
                 <div class="ui-block-b">
