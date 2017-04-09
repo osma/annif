@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<title>Annif - automaattinen sisällönkuvailija Finna-korpuksella</title>
+<title>Annif - automated subject indexing using Finna as a corpus</title>
 <style type="text/css">
 textarea {
   float: left;
@@ -82,26 +82,26 @@ $(document).ready(function() {
     <div class="row">
         <div class="col-lg-12">
 
-<h1>Annif - automaattinen sisällönkuvailija Finna-korpuksella</h1>
-<label for="text">Kuvailtava teksti:</label><br>
+<h1>Annif - automated subject indexing using Finna as a corpus</h1>
+<label for="text">Text to analyze:</label><br>
 <textarea rows="80" cols="100" name="text" id="text">
 
 </textarea>
 <div>
-<label for="language">Kieli:</label>
+<label for="language">Language:</label>
 <select name="language" id="language">
-  <option value="fi">suomi</option>
-  <option value="sv">ruotsi</option>
-  <option value="en">englanti</option>
+  <option value="fi">Finnish</option>
+  <option value="sv">Swedish</option>
+  <option value="en">English</option>
 </select>
 
-<input type="submit" name="submit" id="submit" value="Analysoi">
+<input type="submit" name="submit" id="submit" value="Analyze">
 
 </div>
-<h2>Tulokset</h2>
+<h2>Results</h2>
 <ul id="results">
 </ul>
-<input type="submit" name="teach" id="teach" value="Ilmoita valitut vääriksi">
+<input type="submit" name="teach" id="teach" value="Mark as incorrect">
         </div>
     </div>
 </div>
