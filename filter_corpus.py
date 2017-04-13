@@ -1,16 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from langdetect import detect_langs
 import sys
 import re
 
-concept_info = sys.stdin.readline().strip()
-print concept_info
-preflabel = sys.stdin.readline().strip()
-print preflabel
-
 FINNISH = re.compile(r'\b(ja|joka|oli|kuin|jossa|jotka|jonka)\b')
-SWEDISH = re.compile(r'\b(och|med|som)\b')
+SWEDISH = re.compile(r'\b(och|med|som|att|den|det|eller|av)\b')
 ENGLISH = re.compile(r'\b(and|of|for|at|the)\b')
 
 def is_in_language(targetlang, text):
@@ -30,16 +25,19 @@ def is_in_language(targetlang, text):
     except:
         return False
 
-
-first = True
 seen = set()
 targetlang = sys.argv[1]
+
+# First line contains URI and preferred label, pass it through
+concept_info = sys.stdin.readline().strip()
+print(concept_info)
+# Second line contains labels (preferred and alternate), pass them through
+labels = sys.stdin.readline().strip()
+print(labels)
+
+
 for line in sys.stdin.readlines():
-    line = line.strip().decode('UTF-8')
-    if first: # first line contains URI and label, pass it through
-        first = False
-        print line.encode('UTF-8')
-        continue
+    line = line.strip()
     if line == '':
         continue
     if line in seen:
@@ -47,4 +45,4 @@ for line in sys.stdin.readlines():
     seen.add(line)
     if not is_in_language(targetlang, line):
         continue
-    print line.encode('UTF-8')
+    print(line)
