@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import projects
+
 from elasticsearch import Elasticsearch
 import nltk.data
 import sys
@@ -32,7 +34,7 @@ def split_to_sentences(text, targetlang):
     return sentences
 
 @functools.lru_cache(maxsize=100000)
-def search(text, lang, cutoff_frequency):
+def search(text, proj, cutoff_frequency):
     es = Elasticsearch()
 
     query = {
@@ -40,7 +42,7 @@ def search(text, lang, cutoff_frequency):
             'function_score': {
                 'query': {
                     'common': {
-                        'text_%s' % lang: {
+                        'text_%s' % proj.get_language() : {
                             'query': text,
                             'cutoff_frequency': cutoff_frequency
                         }
@@ -56,17 +58,17 @@ def search(text, lang, cutoff_frequency):
         }
     }
 
-    return es.search(index='yso', doc_type='concept', body=query, size=40, _source=['uri','label_%s' % lang])
+    return es.search(index=proj.get_index_name(), doc_type='concept', body=query, size=40, _source=['uri','label_%s' % proj.get_language()])
 
-def autoindex_block(text, lang, cutoff_frequency, limit, normalize):
+def autoindex_block(text, proj, cutoff_frequency, limit, normalize):
     scores = {}
-    res = search(text, lang, cutoff_frequency)
+    res = search(text, proj, cutoff_frequency)
     maxscore = None
     for hit in res['hits']['hits'][:limit]:
         if maxscore is None:
             maxscore = hit['_score'] # score of best hit
         uri = hit['_source']['uri']
-        scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label_%s' % lang], 'score': 0})
+        scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label_%s' % proj.get_language()], 'score': 0})
         if normalize:
             scores[uri]['score'] += hit['_score'] / maxscore
         else:
@@ -74,8 +76,8 @@ def autoindex_block(text, lang, cutoff_frequency, limit, normalize):
     
     return scores
 
-def autoindex_block_merge(all_scores, text, lang, cutoff_frequency, limit, normalize):
-    scores = autoindex_block(text, lang, cutoff_frequency, limit, normalize)
+def autoindex_block_merge(all_scores, text, proj, cutoff_frequency, limit, normalize):
+    scores = autoindex_block(text, proj, cutoff_frequency, limit, normalize)
     # merge the results into the shared scoring dict
     for uri, hitdata in scores.items():
         if uri in all_scores:
@@ -84,9 +86,11 @@ def autoindex_block_merge(all_scores, text, lang, cutoff_frequency, limit, norma
             all_scores[uri] = hitdata
     
 
-def autoindex(text, language, min_block_length=20, cutoff_frequency=0.009, limit=34, normalize=True, threshold=None, maxhits=None):
+def autoindex(text, project_id, min_block_length=20, cutoff_frequency=0.009, limit=34, normalize=True, threshold=None, maxhits=None):
+    proj = projects.AnnifProjects()[project_id]
+
     if isinstance(text, str):
-        sentences = split_to_sentences(text, language)
+        sentences = split_to_sentences(text, proj.get_language())
     else:
         sentences = text
     all_scores = {}
@@ -115,11 +119,11 @@ def autoindex(text, language, min_block_length=20, cutoff_frequency=0.009, limit
             # next evaluation starts with an empty block
             block = None
 
-        autoindex_block_merge(all_scores, evalblock, language, cutoff_frequency, limit, normalize)
+        autoindex_block_merge(all_scores, evalblock, proj, cutoff_frequency, limit, normalize)
     
     if block is not None:
         # process the remainder
-        autoindex_block_merge(all_scores, block, language, cutoff_frequency, limit, normalize)
+        autoindex_block_merge(all_scores, block, proj, cutoff_frequency, limit, normalize)
         
     scores = list(all_scores.values())
     scores.sort(key=lambda c:c['score'], reverse=True)
@@ -132,8 +136,7 @@ def autoindex(text, language, min_block_length=20, cutoff_frequency=0.009, limit
 
 if __name__ == '__main__':
     text = sys.stdin.read().strip()
-    lang = sys.argv[1]
-
-    scores = autoindex(split_to_sentences(text, lang), lang, threshold=0.2, maxhits=20)
+    project_id = sys.argv[1]
+    scores = autoindex(text, project_id, threshold=0.2, maxhits=20)
     for c in scores[:100]:
         print(c['score'], c['uri'], c['label'])

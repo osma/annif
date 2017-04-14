@@ -45,7 +45,7 @@ label.select {
     display: none;
 }
 
-.languageselector {
+.projectselector {
     margin: 0.5em 0;
     padding: 0;
 }
@@ -65,6 +65,23 @@ label.select {
 var OCR_BACKEND_URL = '/cgi-bin/ocr.cgi';
 var ANNIF_BACKEND_URL = '/cgi-bin/autoindex.cgi';
 
+// hardcoded projects for now
+// TODO read available projects from API instead
+var PROJECTS = {
+    "yso-finna-fi": {
+        name: 'Finnish (YSO)',
+        language: 'fi'
+    },
+    "yso-finna-sv": {
+        name: 'Swedish (YSO)',
+        language: 'sv'
+    },
+    "yso-finna-en": {
+        name: 'English (YSO)',
+        language: 'en'
+    }
+}
+
 // which voice setting to use for Responsive Voice synthesis, per language
 var VOICE_PER_LANGUAGE = {
     fi: "Finnish Female",
@@ -78,13 +95,24 @@ $(function() {
             responsiveVoice.cancel();
         }
     });
+    $.each(PROJECTS, function(project_id, project_data) {
+        $('#project').append(
+            $('<option>').attr('value',project_id).append(project_data.name)
+        );
+    });
+    $( "#project" ).selectmenu("refresh");
 });
+
+function current_language() {
+    var project = $("#project").val();
+    return PROJECTS[project].language;
+}
 
 function handleImage(files) {
     $.mobile.loading('show');
     var formData = new FormData();
     formData.append("imagefile", files[0]);
-    formData.append("language", $('#language').val());
+    formData.append("language", current_language());
     jQuery.ajax({
         url: OCR_BACKEND_URL,
         data: formData,
@@ -114,7 +142,7 @@ function autoindex() {
     $.ajax({
         url: ANNIF_BACKEND_URL,
         method: 'POST',
-        data: { text: $('#previewtext').val(), language: $('#language').val() },
+        data: { text: $('#previewtext').val(), project: $('#project').val() },
         success: function(data) {
             $('#results').empty();
             var labels = [];
@@ -129,7 +157,7 @@ function autoindex() {
             $.mobile.loading('hide');
             $('a[href="#topics"]').trigger("click");
             var labellist = labels.join(". ");
-            responsiveVoice.speak(labellist, VOICE_PER_LANGUAGE[$('#language').val()]);
+            responsiveVoice.speak(labellist, VOICE_PER_LANGUAGE[current_language()]);
         }
     });
 }
@@ -163,12 +191,9 @@ function autoindex() {
                 </div>
 
                 <div class="ui-block-b">
-                    <div class="ui-field-contain languageselector">
-                      <label for="language" class="select">Language:</label>
-                      <select name="language" id="language">
-                        <option value="fi">Finnish</option>
-                        <option value="sv">Swedish</option>
-                        <option value="en">English</option>
+                    <div class="ui-field-contain projectselector">
+                      <label for="project" class="select">Language/Project:</label>
+                      <select name="project" id="project">
                       </select>
                     </div>
                 </div>

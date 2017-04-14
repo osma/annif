@@ -31,7 +31,7 @@ function autoindex() {
         method: 'POST',
         data: { 
           text: $('#text').val(),
-          language: $('#language').val()
+          project: $('#project').val()
         },
         success: function(data) {
             $.each(data, function(idx, value) {
@@ -93,7 +93,7 @@ $(document).ready(function() {
             <p>Annif has a <a href="http://api.annif.org">REST API</a> and a
             <a href="http://m.annif.org">mobile web app</a> that can analyze
             physical documents such as books. With Annif, we can add
-            semantics to documents in three languages (Finnish, Swedish and
+            semantics to documents in three projects (Finnish, Swedish and
             English) using our own indexing vocabulary <a
             href="http://finto.fi/yso/">YSO</a>.</p>
             
@@ -122,11 +122,11 @@ $(document).ready(function() {
 
 </textarea>
 <div>
-<label for="language">Language:</label>
-<select name="language" id="language">
-  <option value="fi">Finnish</option>
-  <option value="sv">Swedish</option>
-  <option value="en">English</option>
+<label for="project">Language/Project:</label>
+<select name="project" id="project">
+  <option value="yso-finna-fi">Finnish (YSO)</option>
+  <option value="yso-finna-sv">Swedish (YSO)</option>
+  <option value="yso-finna-en">English (YSO)</option>
 </select>
 
 <input type="submit" name="submit" id="submit" value="Analyze">

@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 
+import projects
+
 from elasticsearch import Elasticsearch
 import sys
 
 es = Elasticsearch()
 
-lang = sys.argv[1]
+project_id = sys.argv[1]
 uri = sys.argv[2]
 localname = uri.split('p')[-1]
 
-termvec = es.termvectors(index='yso', doc_type='concept', id=localname, fields='text_%s' % lang)
+proj = projects.AnnifProjects()[project_id]
+lang = proj.get_language()
+
+termvec = es.termvectors(index=proj.get_index_name(), doc_type='concept', id=localname, fields='text_%s' % lang)
 
 terms = []
 for term,data in termvec['term_vectors']['text_%s' % lang]['terms'].items():

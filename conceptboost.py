@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 
+import projects
+
 from elasticsearch import Elasticsearch
 import sys
 
-def adjust_boost(uri, factor=0.8):
+def adjust_boost(project_id, uri, factor=0.8):
+    proj = projects.AnnifProjects()[project_id]
     es = Elasticsearch()
     docid = uri.split('p')[-1]
     
@@ -17,8 +20,9 @@ def adjust_boost(uri, factor=0.8):
         }
     }
     
-    es.update(index='yso', doc_type='concept', id=docid, body=req)
+    es.update(index=proj.get_index_name(), doc_type='concept', id=docid, body=req)
 
 if __name__ == '__main__':
-    uri = sys.argv[1]
-    adjust_boost(uri)
+    project_id = sys.argv[1]
+    uri = sys.argv[2]
+    adjust_boost(project_id, uri)

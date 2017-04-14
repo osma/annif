@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import projects
+
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
 import os
@@ -8,8 +10,12 @@ import re
 es = Elasticsearch()
 index = IndicesClient(es)
 
-if index.exists('yso'):
-    index.delete('yso')
+project_id = sys.argv[1]
+proj = projects.AnnifProjects()[project_id]
+index_name = proj.get_index_name()
+
+if index.exists(index_name):
+    index.delete(index_name)
 
 indexconf = {
     'mappings': {
@@ -38,7 +44,7 @@ indexconf = {
     }
 }
             
-index.create(index='yso', body=indexconf)
+index.create(index=index_name, body=indexconf)
 
 files = os.listdir('corpus')
 for file in files:
@@ -53,5 +59,5 @@ for file in files:
     text = " ".join(f.readlines())
     text = re.sub(r'\b\d+\b', '', text) # strip words that consist of only numbers
     body = {'doc': {'uri': uri, 'label_%s' % lang: label, 'text_%s' % lang: text, 'boost': 1}, 'doc_as_upsert': True}
-    es.update(index='yso', doc_type='concept', id=cid, body=body)
+    es.update(index=index_name, doc_type='concept', id=cid, body=body)
     f.close()
