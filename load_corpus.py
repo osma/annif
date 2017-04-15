@@ -4,8 +4,9 @@ import projects
 
 from elasticsearch import Elasticsearch
 from elasticsearch.client import IndicesClient
-import os
+import glob
 import re
+import sys
 
 es = Elasticsearch()
 index = IndicesClient(es)
@@ -13,6 +14,8 @@ index = IndicesClient(es)
 project_id = sys.argv[1]
 proj = projects.AnnifProjects()[project_id]
 index_name = proj.get_index_name()
+analyzer = proj.get_analyzer()
+corpus_pattern = proj.get_corpus_pattern()
 
 if index.exists(index_name):
     index.delete(index_name)
@@ -21,19 +24,9 @@ indexconf = {
     'mappings': {
         'concept': {
             'properties': {
-                'text_fi': {
+                'text': {
                     'type': 'text',
-                    'analyzer': 'finnish',
-                    'term_vector': 'yes'
-                },
-                'text_sv': {
-                    'type': 'text',
-                    'analyzer': 'swedish',
-                    'term_vector': 'yes'
-                },
-                'text_en': {
-                    'type': 'text',
-                    'analyzer': 'english',
+                    'analyzer': analyzer,
                     'term_vector': 'yes'
                 },
                 'boost': {
@@ -46,18 +39,14 @@ indexconf = {
             
 index.create(index=index_name, body=indexconf)
 
-files = os.listdir('corpus')
+files = glob.glob(corpus_pattern)
 for file in files:
-    match = re.match(r'.*-(\w+).txt', file)
-    if not match:
-        continue
-    lang = match.group(1)
-    f = open('corpus/%s' % file, 'r')
+    f = open(file, 'r')
     uri, label = f.readline().strip().split(' ', 1)
-    print(file, lang, uri, label)
+    print(file, uri, label)
     cid = uri.split('p')[-1]
     text = " ".join(f.readlines())
     text = re.sub(r'\b\d+\b', '', text) # strip words that consist of only numbers
-    body = {'doc': {'uri': uri, 'label_%s' % lang: label, 'text_%s' % lang: text, 'boost': 1}, 'doc_as_upsert': True}
+    body = {'doc': {'uri': uri, 'label': label, 'text': text, 'boost': 1}, 'doc_as_upsert': True}
     es.update(index=index_name, doc_type='concept', id=cid, body=body)
     f.close()

@@ -12,12 +12,11 @@ uri = sys.argv[2]
 localname = uri.split('p')[-1]
 
 proj = projects.AnnifProjects()[project_id]
-lang = proj.get_language()
 
-termvec = es.termvectors(index=proj.get_index_name(), doc_type='concept', id=localname, fields='text_%s' % lang)
+termvec = es.termvectors(index=proj.get_index_name(), doc_type='concept', id=localname, fields='text')
 
 terms = []
-for term,data in termvec['term_vectors']['text_%s' % lang]['terms'].items():
+for term,data in termvec['term_vectors']['text']['terms'].items():
     freq = data['term_freq']
     terms += freq * [term]
 

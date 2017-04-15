@@ -42,7 +42,7 @@ def search(text, proj, cutoff_frequency):
             'function_score': {
                 'query': {
                     'common': {
-                        'text_%s' % proj.get_language() : {
+                        'text' : {
                             'query': text,
                             'cutoff_frequency': cutoff_frequency
                         }
@@ -58,7 +58,7 @@ def search(text, proj, cutoff_frequency):
         }
     }
 
-    return es.search(index=proj.get_index_name(), doc_type='concept', body=query, size=40, _source=['uri','label_%s' % proj.get_language()])
+    return es.search(index=proj.get_index_name(), doc_type='concept', body=query, size=40, _source=['uri','label'])
 
 def autoindex_block(text, proj, cutoff_frequency, limit, normalize):
     scores = {}
@@ -68,7 +68,7 @@ def autoindex_block(text, proj, cutoff_frequency, limit, normalize):
         if maxscore is None:
             maxscore = hit['_score'] # score of best hit
         uri = hit['_source']['uri']
-        scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label_%s' % proj.get_language()], 'score': 0})
+        scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label'], 'score': 0})
         if normalize:
             scores[uri]['score'] += hit['_score'] / maxscore
         else:
