@@ -8,6 +8,8 @@ FINNISH = re.compile(r'\b(ja|joka|oli|kuin|jossa|jotka|jonka)\b')
 SWEDISH = re.compile(r'\b(och|med|som|att|den|det|eller|av)\b')
 ENGLISH = re.compile(r'\b(and|of|for|at|the)\b')
 
+MAXLINES = 1000 # stop processing after passing this many lines of text
+
 def is_in_language(targetlang, text):
     # Quick and dirty regex shortcuts for detecting the most common languages
     if FINNISH.search(text) is not None:
@@ -36,6 +38,7 @@ labels = sys.stdin.readline().strip()
 print(labels)
 
 
+passed = 0
 for line in sys.stdin.readlines():
     line = line.strip()
     if line == '':
@@ -46,3 +49,6 @@ for line in sys.stdin.readlines():
     if not is_in_language(targetlang, line):
         continue
     print(line)
+    passed += 1
+    if passed >= MAXLINES:
+        break
