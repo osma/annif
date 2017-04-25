@@ -1,65 +1,65 @@
 {
-    "swagger": "2.0",
-    "info": {
-        "title": "Annif REST API",
-        "version": "v0"
-    },
-    "schemes": [
-        "http"
-    ],
-    "basePath": "/v0/",
-    "paths": {
-        "/autoindex": {
-            "post": {
-                "summary": "suggest subjects for a given text",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "name": "text",
-                        "in": "formData",
-                        "description": "input text",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "language",
-                        "in": "formData",
-                        "description": "language of input text",
-                        "required": false,
-                        "type": "string",
-                        "default": "en"
-                    },
-                    {
-                        "name": "maxhits",
-                        "in": "formData",
-                        "description": "maximum number of results to return",
-                        "required": false,
-                        "type": "integer",
-                        "default": 12
-                    },
-                    {
-                        "name": "threshold",
-                        "in": "formData",
-                        "description": "minimum score threshold, expressed as a fraction of highest score, below which results will not be returned",
-                        "required": false,
-                        "type": "number",
-                        "default": 0.45
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation"
-                    }
-                },
-                "tags": [
-                    "Automatic subject indexing"
-                ]
-            }
-        }
+  "swagger": "2.0",
+  "info": {
+    "title": "Annif REST API",
+    "version": "v0"
+  },
+  "schemes": [
+    "http"
+  ],
+  "basePath": "/v0/",
+  "paths": {
+    "/autoindex": {
+      "post": {
+        "summary": "suggest subjects for a given text",
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "text",
+            "in": "formData",
+            "description": "input text",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "project",
+            "in": "formData",
+            "description": "project identifier",
+            "required": false,
+            "type": "string",
+            "default": "yso-finna-fi"
+          },
+          {
+            "name": "maxhits",
+            "in": "formData",
+            "description": "maximum number of results to return",
+            "required": false,
+            "type": "integer",
+            "default": 12
+          },
+          {
+            "name": "threshold",
+            "in": "formData",
+            "description": "minimum score threshold, expressed as a fraction of highest score, below which results will not be returned",
+            "required": false,
+            "type": "number",
+            "default": 0.45
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          }
+        },
+        "tags": [
+          "Automatic subject indexing"
+        ]
+      }
     }
+  }
 }
