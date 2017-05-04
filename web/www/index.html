@@ -68,7 +68,8 @@ $(document).ready(function() {
     $('#teach').click(function() {
         teach();
         clearResults();
-        autoindex();
+        // reanalyze after 1 second, to give the backend time to adjust
+        setTimeout(autoindex, 1000);
     });
 });
 
