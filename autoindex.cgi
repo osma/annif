@@ -17,12 +17,12 @@ print()
 form = cgi.FieldStorage()
 text = form.getfirst('text')
 
+project_id = form.getfirst('project')
+if project_id is None:
+    project_id = DEFAULT_PROJECT
+
 if text is not None:
     # autoindex mode
-    
-    project_id = form.getfirst('project')
-    if project_id is None:
-        project_id = DEFAULT_PROJECT
     
     threshold = form.getfirst('threshold')
     if threshold is not None:
@@ -43,5 +43,7 @@ if text is not None:
 uri = form.getfirst('uri')
 
 if uri is not None:
-    conceptboost.adjust_boost(uri)
+    # teaching mode
+
+    conceptboost.adjust_boost(project_id, uri)
     print('{ "status": "OK" }')
