@@ -30,7 +30,6 @@ def html_to_text(html):
     return soup.get_text()
 
 reader = csv.reader(open(sys.argv[1], 'r'), delimiter='|')
-n = 0
 for row in reader:
     id = row[0]
     title = html_to_text(row[1])
@@ -43,7 +42,4 @@ for row in reader:
     g = autoindex_doc(text, url, title, date, author, place)
 
     g.serialize(destination=sys.stdout.buffer, format='nt')
-    n += 1
-    if n == 10:
-        break
 
