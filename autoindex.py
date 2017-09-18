@@ -67,6 +67,8 @@ def autoindex_block(text, proj, cutoff_frequency, limit, normalize):
     for hit in res['hits']['hits'][:limit]:
         if maxscore is None:
             maxscore = hit['_score'] # score of best hit
+        if maxscore == 0.0:
+            maxscore = 0.001 # avoid division by zero
         uri = hit['_source']['uri']
         scores.setdefault(uri, {'uri': uri, 'label': hit['_source']['label'], 'score': 0})
         if normalize:
