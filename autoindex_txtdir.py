@@ -21,11 +21,11 @@ for fn in os.listdir(dir):
     if os.path.isfile(outfn):
         continue # done already
 
-    f = open(os.path.join(dir, fn))
+    f = open(os.path.join(dir, fn), errors='replace')
     text = f.read()
     subjfile = os.path.join(dir, "%s.subj" % id)
     if os.path.isfile(subjfile):
-        sf = open(subjfile)
+        sf = open(subjfile, errors='replace')
         maxhits = sum(1 for line in sf)
         sf.close()
     else:
