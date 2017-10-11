@@ -47,6 +47,6 @@ for file in files:
     cid = uri.split('p')[-1]
     text = " ".join(f.readlines())
     text = re.sub(r'\b\d+\b', '', text) # strip words that consist of only numbers
-    body = {'doc': {'uri': uri, 'label': label, 'text': text, 'boost': 1}, 'doc_as_upsert': True}
+    body = {'doc': {'uri': uri, 'label': label, 'text': text, 'boost': 1.0}, 'doc_as_upsert': True}
     es.update(index=index_name, doc_type='concept', id=cid, body=body)
     f.close()
