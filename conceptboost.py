@@ -20,7 +20,10 @@ def adjust_boost(project_id, uri, factor=0.8):
         }
     }
     
-    es.update(index=proj.get_index_name(), doc_type='concept', id=docid, body=req)
+    try:
+        es.update(index=proj.get_index_name(), doc_type='concept', id=docid, body=req)
+    except:
+        pass
 
 if __name__ == '__main__':
     project_id = sys.argv[1]
