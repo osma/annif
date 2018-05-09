@@ -16,6 +16,13 @@ textarea {
   list-style-type: none;
 
 }
+#newversion {
+  background-color: #ffffcc;
+  padding: 0.5em 1em;
+}
+#newversion h2 {
+  margin-top: 0.5em;
+}
 </style>
 <script type="text/javascript">
 
@@ -90,6 +97,21 @@ $(document).ready(function() {
             href="http://finna.fi">Finna</a> search engine for library,
             archive and museum collections, it knows how to assign subjects
             for new documents.</p>
+            
+            <div id="newversion">
+                <h2>New version coming up!</h2>
+                
+                <p>The first version of Annif (2017, presented in the video
+                below) was a hackish prototype.  In 2018 a new version, supporting
+                multiple backends/algorithms and aiming for production use, is
+                being developed at the National Library of Finland.  The code is
+                in the <a
+                href="https://github.com/NatLibFi/Annif">NatLibFi/Annif</a>
+                GitHub repository (Apache License 2.0) and a test instance is
+                running at <a href="http://dev.annif.org">dev.annif.org</a>.</p>
+            </div>
+            
+            <h2>API</h2>
             
             <p>Annif has a <a href="http://api.annif.org">REST API</a> and a
             <a href="http://m.annif.org">mobile web app</a> that can analyze
